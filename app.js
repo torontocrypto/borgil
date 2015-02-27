@@ -1,55 +1,70 @@
 var irc = require('irc');
 
-var networks = {
-	'oftc': {
-		host: 'irc.oftc.net',
-		nick: 'borgil',
-		opts: {
-			userName: 'borgil',
-			realName: 'Borgil of Menelvagor',
-			channels: ['#torontocrypto'],
-		}
-	},
-	'i2p': {
-		host: 'localhost',
-		nick: 'borgil',
-		opts: {
-			port: 6668,
-			userName: 'borgil',
-			realName: 'Borgil of Menelvagor',
-			channels: ['#torontocrypto'],
-		}
-	}
-};
+var config = require('./config');
 
-for (var id in networks) {
-	// create client
-	client = new irc.Client(networks[id].host, networks[id].nick, networks[id].opts);
-	client.id = id;
-	networks[id].client = client;
+var clients = {};
+var channels = [];
 
-	// debug
-	client.addListener('raw', function (msg) {
-		switch(msg.rawCommand) {
+var debug = 0;
 
-		case '001':
-			console.log(this.id + ': Received welcome message from ' + msg.server);
-			break;
 
-		case 'JOIN':
-			console.log(this.id + ': Joined channel ' + msg.args[0]);
-		}
-	});
+for (var id in config.networks) {
+    var network = config.networks[id];
 
-	// broadcast to all channels on all other clients
-	client.addListener('message', function (nick, to, text, msg) {
-		if (networks[this.id].opts.channels.indexOf(to) > -1) {
-			for (var oid in networks) {
-				if (oid == this.id) continue;
-				networks[oid].opts.channels.forEach(function (channel) {
-					networks[oid].client.say(channel, '<' + this.id + '> [' + nick + '] ' + text);
-				}, this);
-			}
-		}
-	});
+    // create client
+    client = clients[id] = new irc.Client(network.host, network.nick, network.opts);
+    client.id = id;
+    client.config = network;
+
+    // debug: echo all messages received from server
+    if (debug) {
+        client.addListener('raw', function (msg) {
+            console.log(this.id, msg.rawCommand, msg.command, ':', msg.args.join(', '));
+        });
+    }
+
+    // call nickserv when first registering on network
+    client.addListener('registered', function (msg) {
+        console.log(this.id, ': Received welcome message from ', msg.server);
+
+        // identify with nickserv
+        console.log('Sending message to NickServ: IDENTIFY ' + this.config.nickserv + ' ' + this.config.nick);
+        this.say('NickServ', 'IDENTIFY ' + this.config.nickserv + ' ' + this.config.nick);
+    });
+
+    // once nickserv confirmation comes back, join channels
+    client.addListener('notice', function (nick, to, text, msg) {
+        if (nick == 'NickServ' && to == this.config.nick && text.indexOf('You are successfully identified') > -1) {
+            // identified with nickserv - time to join channels
+            this.config.channels.forEach(function (channel) {
+                this.join(channel);
+            }, this);
+        }
+    });
+
+    // keep track of channels joined
+    client.addListener('join', function (channel, nick, msg) {
+        // make sure it's the bot that just joined
+        if (nick == this.nick) {
+            console.log(this.id + ': Joined channel ' + channel);
+            channels.push({
+                network: this.id,
+                name: channel
+            });
+        }
+    });
+
+    client.addListener('message#', function (nick, to, text, msg) {
+        // make sure the message is coming from one of the bot's channels
+        channels.forEach(function (channel) {
+            if (channel.network == this.id && channel.name == to) {
+                // broadcast to all other channels
+                channels.forEach(function (channel) {
+                    if (channel.network != this.id || channel.name != to) {
+                        clients[channel.network].say(channel.name, '<' + this.id + '> [' + nick + ']', text);
+                    }
+                });
+            }
+        });
+    });
 }
