@@ -1,4 +1,5 @@
 var irc = require('irc');
+var request = require('request');
 
 var config = require('./config');
 
@@ -32,7 +33,7 @@ for (var id in config.networks) {
         this.say('NickServ', 'IDENTIFY ' + this.config.nickserv + ' ' + this.config.nick);
     });
 
-    // once nickserv confirmation comes back, join channels
+    // join channels only when nickserv identification comes back
     client.addListener('notice', function (nick, to, text, msg) {
         if (nick == 'NickServ' && to == this.config.nick && text.indexOf('You are successfully identified') > -1) {
             // identified with nickserv - time to join channels
@@ -61,9 +62,24 @@ for (var id in config.networks) {
                 // broadcast to all other channels
                 channels.forEach(function (channel) {
                     if (channel.network != this.id || channel.name != to) {
-                        clients[channel.network].say(channel.name, '<' + this.id + '> [' + nick + ']', text);
+                        clients[channel.network].say(channel.name, '<' + this.id + '> [' + nick + '] ' + text);
                     }
                 });
+            }
+        });
+    });
+
+    client.addListener('message#', function (nick, to, text, msg) {
+        var client = this;
+        var m = text.match(/https?:\/\/\S+/i);
+        if (!m) return;
+        var url = m[0];
+        request.get(url, function (err, res, body) {
+            if (!err && res.statusCode == 200) {
+                var t = body.match(/<title>(.+)<\/title>/i);
+                if (!t || !t[1].length) return;
+                var title = t[1];
+                client.say(to, '[ ' + title + ' ] - ' + url.replace(/^https?:\/\//i, ''));
             }
         });
     });
