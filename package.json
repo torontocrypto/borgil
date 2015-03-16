@@ -2,15 +2,12 @@
   "name": "borgil",
   "version": "1.0.0",
   "description": "An IRC bot that echoes messages between channels and networks.",
-  "main": "app.js",
+  "main": "borgil.js",
   "dependencies": {
     "irc": "^0.3.8",
     "request": "^2.53.0"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "",
   "license": "ISC"
 }
