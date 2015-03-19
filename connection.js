@@ -5,7 +5,7 @@ module.exports = function (config) {
     var clients = {};
 
     // escape command character for use in regex
-    config.commandchar = (config.commandchar || '.').replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&')
+    config.commandchar = (config.commandchar || '.').replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
 
     for (var network in config.networks) {
         var networkcfg = config.networks[network];
@@ -23,26 +23,34 @@ module.exports = function (config) {
             });
         }
 
-        identifyAndJoin(client);
+        // call nickserv and join channels
+        client.once('registered', identifyAndJoin);
     }
     return clients;
 };
 
 
-function identifyAndJoin(client) {
-    // call nickserv when first registering on network
-    client.addListener('registered', function (msg) {
+function joinAllChannels() {
+    this.config.channels.forEach(function (channel) {
+        this.join(channel);
+    });
+}
+
+
+// identify with nickserv, optionally wait for confirmation, then join channels
+function identifyAndJoin() {
+    if (this.config.nickserv) {
         console.log(this.network + ': Received welcome message from', msg.server + '. Sending IDENTIFY to NickServ...');
         this.say('NickServ', 'IDENTIFY ' + this.config.nickserv + ' ' + this.config.nick);
-    });
+    }
 
-    // join channels only when nickserv identification comes back
-    client.addListener('notice', function (nick, to, text, msg) {
-        if (nick == 'NickServ' && to == this.config.nick && text.indexOf('You are successfully identified') > -1) {
-            // identified with nickserv - time to join channels
-            this.config.channels.forEach(function (channel) {
-                this.join(channel);
-            }, this);
-        }
-    });
+    if (this.config.requireNickServ) {
+        // join channels only when nickserv identification comes back
+        this.once('notice', function (nick, to, text, msg) {
+            if (nick == 'NickServ' && to == this.config.nick && text.indexOf('You are successfully identified') > -1) {
+                joinAllChannels.call(this);
+            }
+        });
+    }
+    else joinAllChannels.call(this);
 }
