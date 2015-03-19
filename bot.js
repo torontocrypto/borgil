@@ -1,52 +1,57 @@
-var connection = require('./connection');
+var ClientManager = require('./manager');
 
-var clients;
 
-var bot = {
-    use: function (plugin) {
-        // call the plugin with this bot instance so it can add commands
-        if (typeof plugin == 'function') {
-            plugin(bot);
-        }
-        else if (typeof plugin == 'Object') {
-            for (prop in plugin) {
-                if (typeof prop == 'function') {
-                    prop(bot);
-                }
+var bot;
+var manager;
+
+
+// this is an API for bot plugins
+var Bot = module.exports = function (config) {
+    bot = this;
+    bot.config = config;
+    manager = new ClientManager(config);
+};
+
+
+Bot.prototype.use = function (plugin) {
+    if (typeof plugin == 'function') {
+        plugin.call(bot, bot);
+    }
+    else if (typeof plugin == 'Object') {
+        for (p in plugin) {
+            if (typeof plugin[p] == 'function') {
+                plugin[p].call(bot, bot);
             }
         }
-    },
-
-    listen: function (pattern, callback) {
-        // add listener for this pattern
-        for (network in clients) {
-            clients[network].addListener('message', function (nick, target, text, msg) {
-                var match = text.match(pattern);
-                if (match) {
-                    callback(network, target, nick, text, match);
-                }
-            });
-        }
-    },
-
-    command: function (command, callback) {
-        // add listener for this string prefixed by command character
-        for (network in clients) {
-            clients[network].addListener('message', function (nick, target, text, msg) {
-                var match = text.match('^' + config.commandchar + command + '(?:\\s+(.*))?');
-                if (match) {
-                    callback(network, target, nick, text, (match[1] || '').trim().split(/\s+/));
-                }
-            })
-        }
-    },
-
-    say: function (network, target, message) {
-        clients[network].say(target, message);
     }
 };
 
-module.exports = function (config) {
-    clients = connection(config);
-    return bot;
-}
+
+Bot.prototype.get_nick = function (network) {
+    return manager.clients[network].nick;
+};
+
+
+Bot.prototype.listen = function (pattern, callback, includePrivate) {
+    manager.addListener(includePrivate ? 'message' : 'message#', function (client, nick, target, text, msg) {
+        var match = text.match(pattern);
+        if (match) {
+            callback.call(bot, client._network, target, nick, text, match);
+        }
+    });
+};
+
+
+Bot.prototype.addCommand = function (command, callback, includePrivate) {
+    manager.addListener(includePrivate ? 'message' : 'message#', function (client, nick, target, text, msg) {
+        var match = text.match('^' + bot.config.commandchar + command + '(?:\\s+(.*))?');
+        if (match) {
+            callback.call(bot, client._network, target, nick, text, (match[1] || '').trim().split(/\s+/));
+        }
+    });
+};
+
+
+Bot.prototype.say = function (network, target, text) {
+    manager.clients[network].say(target, text);
+};

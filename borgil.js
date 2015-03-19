@@ -1,7 +1,8 @@
-var bot = require('./bot');
+var Bot = require('./bot');
 var config = require('./config');
-var url = require('./plugins/url');
 
-var borgil = bot(config);
 
-borgil.use(url);
+var borgil = new Bot(config);
+
+//borgil.use(require('./plugins/echo'));
+borgil.use(require('./plugins/url'));

@@ -13,7 +13,8 @@ module.exports = {
                 "realName": "Borgil of Menelvagor"
             },
             "channels": ["#torontocrypto"],
-            "nickserv": "password"
+            "nickserv": "password",
+            "requireNickServ": true
         },
         "i2p": {
             "host": "localhost",
@@ -24,7 +25,8 @@ module.exports = {
                 "realName": "Borgil of Menelvagor"
             },
             "channels": ["#torontocrypto"],
-            "nickserv": "password"
+            "nickserv": "password",
+            "requireNickServ": true
         }
     }
 };
