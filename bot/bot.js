@@ -42,6 +42,11 @@ Bot.prototype.get_nick = function (network) {
 };
 
 
+Bot.prototype.get_buffer = function (network, target) {
+    return manager.buffers[network][target];
+}
+
+
 Bot.prototype.listen = function (pattern, callback, includePrivate) {
     manager.addListener(includePrivate ? 'message' : 'message#', function (client, nick, target, text, msg) {
         var match = text.match(pattern);

@@ -7,6 +7,7 @@ var ClientManager = module.exports = function (config) {
     var manager = this;
     manager.config = config;
     manager.clients = {};
+    manager.buffers = {};
 
     // run the event emitter constructor
     EventEmitter.call(manager);
@@ -19,6 +20,9 @@ var ClientManager = module.exports = function (config) {
         var client = manager.clients[network] = new irc.Client(networkcfg.host, networkcfg.nick, networkcfg.opts);
         client._network = network;
         client._config = networkcfg;
+
+        // create buffer object for this network
+        manager.buffers[network] = {};
 
         // monkeypatch the emit function to pass all events to the ClientManager object as well
         var selfEmit = client.emit;
@@ -34,7 +38,7 @@ var ClientManager = module.exports = function (config) {
             selfEmit.apply(client, args);
         }
 
-        // call nickserv and join channels
+        // call nickserv and join nickserv-only channels
         client.once('registered', identifyAndJoin);
     }
 
@@ -44,6 +48,21 @@ var ClientManager = module.exports = function (config) {
             console.log(client._network, msg.rawCommand, msg.command, ((msg.nick || '') + ':'), msg.args.join(', '));
         });
     }
+
+    manager.addListener('message', function (client, nick, target, text, msg) {
+        if (!(target in this.buffers[network])) {
+            this.buffers[network][target] = [];
+        }
+        if (this.buffers[network][target].length >= (this.config.buffer || 100)) {
+            this.buffers[network][target].pop();
+        }
+
+        this.buffers[network][target].unshift({
+            nick: nick,
+            text: text,
+            time: Date.now(),
+        });
+    });
 }
 // extend the event emitter class
 util.inherits(ClientManager, EventEmitter);

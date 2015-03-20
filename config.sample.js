@@ -1,6 +1,7 @@
 module.exports = {
     "debug": false,
     "commandchar": ".",
+    "buffer": 100,
     "networks": {
         "oftc": {
             "host": "irc.oftc.net",
