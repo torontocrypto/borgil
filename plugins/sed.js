@@ -1,5 +1,13 @@
 module.exports = function (bot) {
-    bot.listen(/(?:(\S+)[,:]\s+)?s\/((?:\\\/|[^\/])+)\/((?:\\\/|[^\/])+)(?:\/(\S+))?/, function (network, target, nick, text, match) {
+    var pattern = new RegExp(
+        '(?:(\\S+):\\s+)?' +      // optional nick + colon
+        's\\/' +                  // s + slash
+        '((?:\\\\/|[^\/])+)\\/' + // search term + slash
+        '((?:\\\\/|[^\\/])*)' +   // optional replacement
+        '(?:\\/(\\S+))?'          // optional slash + flags
+    );
+
+    bot.listen(pattern, function (network, target, nick, text, match) {
         var othernick = match[1],
             search = match[2],
             replace = match[3],
