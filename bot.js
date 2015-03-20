@@ -27,6 +27,16 @@ Bot.prototype.use = function (plugin) {
 };
 
 
+Bot.prototype.get_networks = function () {
+    return Object.keys(manager.clients);
+};
+
+
+Bot.prototype.get_channels = function (network) {
+    return Object.keys(manager.clients[network].chans);
+}
+
+
 Bot.prototype.get_nick = function (network) {
     return manager.clients[network].nick;
 };

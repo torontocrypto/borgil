@@ -12,9 +12,8 @@ module.exports = {
                 "userName": "borgil",
                 "realName": "Borgil of Menelvagor"
             },
-            "channels": ["#torontocrypto"],
-            "nickserv": "password",
-            "requireNickServ": true
+            "nickserv_channels": ["#torontocrypto"],
+            "nickserv_password": "password"
         },
         "i2p": {
             "host": "localhost",
@@ -24,9 +23,8 @@ module.exports = {
                 "userName": "borgil",
                 "realName": "Borgil of Menelvagor"
             },
-            "channels": ["#torontocrypto"],
-            "nickserv": "password",
-            "requireNickServ": true
+            "nickserv_channels": ["#torontocrypto"],
+            "nickserv_password": "password"
         }
     }
 };
