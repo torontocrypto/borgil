@@ -34,7 +34,7 @@ Bot.prototype.get_networks = function () {
 
 Bot.prototype.get_channels = function (network) {
     return Object.keys(manager.clients[network].chans);
-}
+};
 
 
 Bot.prototype.get_nick = function (network) {
@@ -44,11 +44,11 @@ Bot.prototype.get_nick = function (network) {
 
 Bot.prototype.get_buffer = function (network, target) {
     return manager.buffers[network][target];
-}
+};
 
 
-Bot.prototype.listen = function (pattern, callback, includePrivate) {
-    manager.addListener(includePrivate ? 'message' : 'message#', function (client, nick, target, text, msg) {
+Bot.prototype.listen = function (type, pattern, callback) {
+    manager.addListener(type, function (client, nick, target, text, msg) {
         var match = text.match(pattern);
         if (match) {
             callback.call(bot, client._network, target, nick, text, match);
@@ -57,8 +57,13 @@ Bot.prototype.listen = function (pattern, callback, includePrivate) {
 };
 
 
-Bot.prototype.addCommand = function (command, callback, includePrivate) {
-    manager.addListener(includePrivate ? 'message' : 'message#', function (client, nick, target, text, msg) {
+Bot.prototype.addCommand = function (command, callback, ignorePrivate, ignorePublic) {
+    var type = 'message';
+    if (ignorePrivate && ignorePublic) return;
+    else if (ignorePrivate) type = 'message#';
+    else if (ignorePublic) type = 'pm';
+
+    manager.addListener(type, function (client, nick, target, text, msg) {
         var match = text.match('^' + bot.config.commandchar + command + '(?:\\s+(.*))?');
         if (match) {
             callback.call(bot, client._network, target, nick, text, (match[1] || '').trim().split(/\s+/));

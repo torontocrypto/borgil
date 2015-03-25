@@ -2,7 +2,7 @@ var request = require('request');
 
 module.exports = function (bot) {
     // fetch title for URLs and echo it into the channel
-    bot.listen(/https?:\/\/([^\/\s]+)\S*/i, function (network, target, nick, text, match) {
+    bot.listen('message#', /https?:\/\/([^\/\s]+)\S*/i, function (network, target, nick, text, match) {
         var url = match[0];
         var domain = match[1];
         request.get(url, function (err, res, body) {

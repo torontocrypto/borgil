@@ -1,5 +1,5 @@
 module.exports = function (bot) {
-    bot.listen('.*', function (network, target, nick, text, match) {
+    bot.listen('message', '.*', function (network, target, nick, text, match) {
         bot.get_networks().forEach(function (nw) {
             bot.get_channels(nw).forEach(function (ch) {
                 if (nw != network || ch != target) {
