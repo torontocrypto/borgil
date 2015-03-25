@@ -2,6 +2,9 @@ var EventEmitter = require('events').EventEmitter;
 var irc = require('irc');
 var util = require('util');
 
+var buffer = require('./buffer');
+var nickserv = require('./nickserv');
+
 
 var ClientManager = module.exports = function (config) {
     var manager = this;
@@ -33,13 +36,13 @@ var ClientManager = module.exports = function (config) {
 
             // emit the event at the manager level
             // passing the client as the first argument and original arguments afterward
-            manager.emit.apply(manager, [args[0], client].concat(args.slice(1)));
+            manager.emit.apply(manager, [args[0], this].concat(args.slice(1)));
             // emit the event at the client level as normal
-            selfEmit.apply(client, args);
+            selfEmit.apply(this, args);
         }
 
         // call nickserv and join nickserv-only channels
-        client.once('registered', identifyAndJoin);
+        client.once('registered', nickserv.identifyAndJoin);
     }
 
     // echo all received messages for debugging
@@ -49,46 +52,7 @@ var ClientManager = module.exports = function (config) {
         });
     }
 
-    manager.addListener('message', function (client, nick, target, text, msg) {
-        if (!(target in this.buffers[network])) {
-            this.buffers[network][target] = [];
-        }
-        if (this.buffers[network][target].length >= (this.config.buffer || 100)) {
-            this.buffers[network][target].pop();
-        }
-
-        this.buffers[network][target].unshift({
-            nick: nick,
-            text: text,
-            time: Date.now(),
-        });
-    });
+    manager.addListener('message', buffer.updateChannelBuffer);
 }
 // extend the event emitter class
 util.inherits(ClientManager, EventEmitter);
-
-
-function checkForIdentifySuccess(nick, target, text, msg) {
-    if (nick == 'NickServ' && target == this._config.nick && text.indexOf('You are successfully identified') > -1) {
-        // join all nickserv-only channels
-        this._config.nickserv_channels.forEach(function (channel) {
-            this.join(channel);
-        }, this);
-    }
-    else {
-        // reassign the listener
-        this.once('notice', checkForIdentifySuccess);
-    }
-}
-
-
-// identify with nickserv, optionally wait for confirmation, then join channels
-function identifyAndJoin(msg) {
-    if (this._config.nickserv_channels && this._config.nickserv_password) {
-        console.log(this._network + ': Received welcome message from ' + msg.server + '. Sending IDENTIFY to NickServ...');
-        this.say('NickServ', 'IDENTIFY ' + this._config.nickserv_password + ' ' + this._config.nick);
-    }
-
-    // join channels only when nickserv identification comes back
-    this.once('notice', checkForIdentifySuccess);
-}
