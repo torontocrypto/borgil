@@ -53,7 +53,14 @@ Bot.prototype.listen = function (type, pattern, callback) {
     manager.addListener(type, function (client, nick, target, text, msg) {
         var match = text.match(pattern);
         if (match) {
-            callback.call(bot, client._network, target, nick, text, match);
+            callback.call(bot, {
+                network: client._network,
+                nick: nick,
+                target: target,
+                replyto: target == client.nick ? nick : target,
+                text: text,
+                match: match
+            });
         }
     });
 };
@@ -73,7 +80,15 @@ Bot.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     manager.addListener(type, function (client, nick, target, text, msg) {
         var match = text.match('^' + bot.config.commandchar + '(' + command + ')(?:\\s+(.*?))?\\s*$');
         if (match) {
-            callback.call(bot, client._network, target, nick, match[1], match[2] || '');
+            callback.call(bot, {
+                network: client._network,
+                nick: nick,
+                target: target,
+                replyto: target == client.nick ? nick : target,
+                command: match[1],
+                text: match[2] || '',
+                args: (match[2] || []).split(/\s+/)
+            });
         }
     });
 };
