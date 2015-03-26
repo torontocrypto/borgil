@@ -15,7 +15,7 @@ module.exports = function (bot) {
 
         var regex = new RegExp(search, flags);
 
-        bot.get_buffer(msg.network, msg.target).slice(1).some(function (oldmsg) {
+        bot.buffers[msg.network][msg.target].slice(1).some(function (oldmsg) {
             // check for messages from the other nick if specified, else the same nick
             // try not to match other substitutions, i.e. messages starting with s/
             if (oldmsg.nick == (othernick || msg.nick) && oldmsg.text.slice(0, 2) != 's/') {
