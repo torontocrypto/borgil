@@ -1,3 +1,5 @@
+var util = require('util');
+
 var ClientManager = require('./manager');
 
 
@@ -63,10 +65,15 @@ Bot.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     else if (ignorePrivate) type = 'message#';
     else if (ignorePublic) type = 'pm';
 
+    if (!command) return;
+    if (util.isArray(command)) command = command.filter(function (cmd) {
+        return typeof cmd == 'string' && cmd;
+    }).join('|');
+
     manager.addListener(type, function (client, nick, target, text, msg) {
-        var match = text.match('^' + bot.config.commandchar + command + '(?:\\s+(.*))?');
+        var match = text.match('^' + bot.config.commandchar + '(' + command + ')(?:\\s+(.*?))?\\s*$');
         if (match) {
-            callback.call(bot, client._network, target, nick, text, (match[1] || '').trim().split(/\s+/));
+            callback.call(bot, client._network, target, nick, match[1], match[2] || '');
         }
     });
 };

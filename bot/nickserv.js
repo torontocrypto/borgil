@@ -13,7 +13,7 @@ function checkForIdentifySuccess(nick, target, text, msg) {
 
 // identify with nickserv, optionally wait for confirmation, then join channels
 module.exports.identifyAndJoin = function (msg) {
-    if (this._config.nickserv_channels && this._config.nickserv_password) {
+    if (this._config.nickserv_channels && this._config.nickserv_channels.length && this._config.nickserv_password) {
         console.log(this._network + ': Received welcome message from ' + msg.server + '. Sending IDENTIFY to NickServ...');
         this.say('NickServ', 'IDENTIFY ' + this._config.nickserv_password + ' ' + this._config.nick);
     }
