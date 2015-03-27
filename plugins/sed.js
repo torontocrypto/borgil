@@ -1,7 +1,7 @@
 module.exports = function (bot) {
     var pattern = new RegExp(
         '(?:(\\S+):\\s+)?' +      // optional nick + colon
-        's\\/' +                  // s + slash
+        '\\bs\\/' +               // s + slash
         '((?:\\\\/|[^\/])+)\\/' + // search term + slash
         '((?:\\\\/|[^\\/])*)' +   // optional replacement
         '(?:\\/(\\S+))?'          // optional slash + flags
