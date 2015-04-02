@@ -2,33 +2,26 @@ var EventEmitter = require('events').EventEmitter;
 var irc = require('irc');
 var util = require('util');
 
-var buffer = require('./buffer');
-var nickserv = require('./nickserv');
-
 
 var ClientManager = module.exports = function (config) {
-    var manager = this;
-    manager.config = config;
-    manager.clients = {};
-    manager.buffers = {};
+    this.config = config;
+    this.clients = {};
 
     // run the event emitter constructor
-    EventEmitter.call(manager);
+    EventEmitter.call(this);
 
     // create a client instance for each network in the config
     for (var network in config.networks) {
         var networkcfg = config.networks[network];
 
         // instantiate the client
-        var client = manager.clients[network] = new irc.Client(networkcfg.host, networkcfg.nick, networkcfg.opts);
+        var client = this.clients[network] = new irc.Client(networkcfg.host, networkcfg.nick, networkcfg.opts);
         client._network = network;
         client._config = networkcfg;
 
-        // create buffer object for this network
-        manager.buffers[network] = {};
-
         // monkeypatch the emit function to pass all events to the ClientManager object as well
-        var selfEmit = client.emit;
+        var selfEmit = client.emit,
+            manager = this;
         client.emit = function () {
             // create an array of arguments
             var args = [];
@@ -40,19 +33,12 @@ var ClientManager = module.exports = function (config) {
             // emit the event at the client level as normal
             selfEmit.apply(this, args);
         }
-
-        // call nickserv and join nickserv-only channels
-        client.once('registered', nickserv.identifyAndJoin);
     }
 
-    // echo all received messages for debugging
-    if (config.debug) {
-        manager.addListener('raw', function (client, msg) {
-            console.log(client._network, msg.rawCommand, msg.command, ((msg.nick || '') + ':'), msg.args.join(', '));
-        });
-    }
-
-    manager.addListener('message', buffer.updateChannelBuffer);
+    // include extra functionality
+    require('./buffer').call(this);
+    require('./logger').call(this);
+    require('./nickserv').call(this);
 }
 // extend the event emitter class
 util.inherits(ClientManager, EventEmitter);
