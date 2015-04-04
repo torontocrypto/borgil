@@ -2,6 +2,8 @@ module.exports = {
     "debug": false,
     "commandchar": ".",
     "buffer": 100,
+    "logconsole": true,
+    "logfile": "raw.log",
     "networks": {
         "oftc": {
             "host": "irc.oftc.net",

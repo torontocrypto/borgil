@@ -16,8 +16,10 @@ var ClientManager = module.exports = function (config) {
 
         // instantiate the client
         var client = this.clients[network] = new irc.Client(networkcfg.host, networkcfg.nick, networkcfg.opts);
-        client._network = network;
-        client._config = networkcfg;
+        // prefix these with two underscores because they extend the third-party client object
+        // and we want to avoid possible future conflicts
+        client.__network = network;
+        client.__config = networkcfg;
 
         // monkeypatch the emit function to pass all events to the ClientManager object as well
         var selfEmit = client.emit,
@@ -36,8 +38,8 @@ var ClientManager = module.exports = function (config) {
     }
 
     // include extra functionality
-    require('./buffer').call(this);
     require('./logger').call(this);
+    require('./buffer').call(this);
     require('./nickserv').call(this);
 }
 // extend the event emitter class

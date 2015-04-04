@@ -10,10 +10,10 @@ module.exports = function () {
         var source = target == client.nick ? nick : target;
 
         // initialize buffer for this source if necessary
-        if (!(source in this.buffers[client._network])) {
-            this.buffers[client._network][source] = [];
+        if (!(source in this.buffers[client.__network])) {
+            this.buffers[client.__network][source] = [];
         }
-        var buffer = this.buffers[client._network][source];
+        var buffer = this.buffers[client.__network][source];
 
         if (buffer.length >= (this.config.buffer || 100)) {
             buffer.pop();
