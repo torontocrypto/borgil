@@ -33,8 +33,4 @@ module.exports = function () {
             this.log.debug('%s: <- %s %s', client.__network, msg.rawCommand, msg.command, msg.args);
         });
     }
-
-    this.addListener('pluginError', function (client, plugin, message) {
-        this.log.error('%s: Error in plugin %s: %s', client.__network, plugin, message);
-    });
 };

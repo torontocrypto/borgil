@@ -8,5 +8,6 @@ var borgil = new Bot(config);
 //borgil.use('errortest');
 borgil.use('broadcast');
 borgil.use('ddg-scraper');
+borgil.use('rss');
 borgil.use('sed');
 borgil.use('url');

@@ -24,7 +24,7 @@ function callPlugin(bot, client, currentPlugin, callback, arg) {
         callback.call(bot, arg);
     }
     catch (e) {
-        bot._manager.emit('pluginError', client, currentPlugin, e.message);
+        bot._manager.log.error('%s: Error in plugin %s: %s', client.__network, currentPlugin, e.message);
     }
 }
 
@@ -86,6 +86,12 @@ Bot.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
 // Send a message to the specified target.
 Bot.prototype.say = function (network, target, text) {
     this._manager.clients[network].say(target, text);
+};
+
+
+// Add a line to the log
+Bot.prototype.log = function (message) {
+    this._manager.log.info('' + message);
 };
 
 

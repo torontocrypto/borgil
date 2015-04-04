@@ -9,7 +9,7 @@ module.exports = function (bot) {
 
         request.get(url, function (err, res, body) {
             if (!err && res.statusCode == 200) {
-                var t = body.match(/<title>(.+)<\/title>/i);
+                var t = body.match(/<title>\s*(.*?)\s*<\/title>/i);
                 if (!t || !t[1].length) return;
                 var title = entities.decodeHTML(t[1]);
                 bot.say(msg.network, msg.target, '[ ' + title + ' ] - ' + domain);
