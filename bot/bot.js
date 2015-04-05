@@ -19,12 +19,13 @@ Bot.prototype.use = function (name) {
 
 
 // a wrapper for the plugin caller, with error handling
-function callPlugin(bot, client, currentPlugin, callback, arg) {
+function callPlugin(bot, callback, arg) {
     try {
         callback.call(bot, arg);
     }
     catch (e) {
-        bot._manager.log.error('%s: Error in plugin %s: %s', client.__network, currentPlugin, e.message);
+        console.log(e.stack);
+        bot._manager.emit('error', util.format('Error in plugin %s: %s', bot._currentPlugin, e.message));
     }
 }
 
@@ -36,9 +37,10 @@ Bot.prototype.listen = function (type, pattern, callback) {
 
     if (['message', 'message#', 'pm'].indexOf(type) > -1) {
         this._manager.addListener(type, function (client, nick, target, text, msg) {
+            bot._currentPlugin = currentPlugin;
             var match = text.match(pattern);
             if (match) {
-                callPlugin(bot, client, currentPlugin, callback, {
+                callPlugin(bot, callback, {
                     network: client.__network,
                     nick: nick,
                     target: target,
@@ -68,9 +70,10 @@ Bot.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     }).join('|');
 
     this._manager.addListener(type, function (client, nick, target, text, msg) {
+        bot._currentPlugin = currentPlugin;
         var match = text.match('^' + bot.config.commandchar + '(' + command + ')(?:\\s+(.*?))?\\s*$');
         if (match) {
-            callPlugin(bot, client, currentPlugin, callback, {
+            callPlugin(bot, callback, {
                 network: client.__network,
                 nick: nick,
                 target: target,
@@ -84,14 +87,21 @@ Bot.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
 };
 
 // Send a message to the specified target.
-Bot.prototype.say = function (network, target, text) {
+Bot.prototype.say = function (network, target) {
+    var text = util.format.apply(null, Array.prototype.slice.call(arguments, 2));
     this._manager.clients[network].say(target, text);
 };
 
 
 // Add a line to the log
-Bot.prototype.log = function (message) {
-    this._manager.log.info('' + message);
+Bot.prototype.log = function () {
+    this._manager.log.info(util.format.apply(null, arguments));
+};
+
+
+// Throw an error
+Bot.prototype.error = function () {
+    this._manager.emit('error', util.format.apply(null, arguments));
 };
 
 

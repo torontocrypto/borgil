@@ -30,7 +30,11 @@ module.exports = function () {
 
     if (this.config.debug) {
         this.addListener('raw', function (client, msg) {
-            this.log.debug('%s: <- %s %s', client.__network, msg.rawCommand, msg.command, msg.args);
+            this.log.debug('%s: <-', client.__network, msg.rawCommand, msg.command.toUpperCase(), msg.nick || '', msg.args);
         });
     }
+
+    this.addListener('error', function (err) {
+        this.log.error(err);
+    });
 };

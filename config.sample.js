@@ -29,5 +29,10 @@ module.exports = {
             "nickserv_channels": ["#torontocrypto"],
             "nickserv_password": "password"
         }
+    },
+    "plugins": {
+        "rss": {
+            "interval": 10
+        }
     }
 };

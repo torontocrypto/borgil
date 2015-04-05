@@ -5,27 +5,56 @@ var util = require('util');
 
 var feeds = [];
 
-var interval = 120;
-
+var defaultInterval = 10;
 var intervalObj = null;
 
 
 module.exports = function (bot) {
     function fetch(feed) {
+        bot.log('Fetching feed "%s" from %s', feed.name, feed.url);
+
         var parser = new FeedParser({});
 
-        request.get(feed.url)
-        .on('error', function (err) {
-            bot.log('RSS request error: ' + err);
+        // add cache validation headers
+        var headers = {};
+        if (feed.etag) {
+            bot.log('Sending saved etag %s for feed "%s"', feed.etag, feed.name);
+            headers['If-None-Match'] = feed.etag;
+        }
+        if (feed.last_modified) {
+            bot.log('Sending saved last-modified date "%s" for feed "%s"', feed.last_modified, feed.name);
+            headers['If-Modified-Since'] = feed.last_modified;
+        }
+
+        request.get({
+            url: feed.url,
+            headers: headers
+        })
+        .on('error', function (e) {
+            bot.error('RSS request error:', e.message);
         })
         .on('response', function (res) {
+            bot.log('Received %d response from feed "%s"', res.statusCode, feed.name);
+
+            if (res.statusCode == 304) return;
             if (res.statusCode != 200) return this.emit('error', new Error('Bad RSS status code: ' + res.statusCode));
+
+            // save cache validation headers
+            if (res.headers.etag) {
+                bot.log('Saving etag %s for feed "%s"', res.headers.etag, feed.name);
+                feed.etag = res.headers.etag;
+            }
+            if (res.headers['last-modified']) {
+                bot.log('Saving last-modified date "%s" for feed "%s"', res.headers['last-modified'], feed.name);
+                feed.last_modified = res.headers['last-modified'];
+            }
+
             this.pipe(parser);
         });
 
         parser
-        .on('error', function (err) {
-            bot.log('RSS parser error: ' + err);
+        .on('error', function (e) {
+            bot.error('RSS parser error:', e.message);
         })
         .once('readable', function () {
             item = this.read();
@@ -68,7 +97,10 @@ module.exports = function (bot) {
 
             break;
 
+        case 'del':
+        case 'delete':
         case 'remove':
+        case 'rm':
             feeds = feeds.filter(function (feed) {
                 if (cmd.args[1] == feed.name || cmd.args[1] == feed.url) {
                     bot.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
@@ -103,9 +135,15 @@ module.exports = function (bot) {
             break;
 
         case 'start':
+            var interval = defaultInterval;
+            try {
+                interval = parseInt(bot.config.plugins.rss.interval);
+            } catch (e) {}
+
+
             if (!intervalObj) {
-                bot.say(cmd.network, cmd.replyto, util.format('Starting to fetch feeds every %d seconds.', interval));
-                intervalObj = setInterval(fetchAll, interval * 1000);
+                bot.say(cmd.network, cmd.replyto, util.format('Starting to fetch feeds every %d minutes.', interval));
+                intervalObj = setInterval(fetchAll, interval * 60000);
             }
             else {
                 bot.say(cmd.network, cmd.replyto, util.format('Feeds are already being fetched every %d seconds.', interval));
