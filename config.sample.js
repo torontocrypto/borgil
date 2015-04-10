@@ -35,7 +35,9 @@ module.exports = {
     },
     "plugins": {
         "rss": {
-            "interval": 10
+            "interval": 10,
+            "item_template": "[{{color}}{{name}}{{reset}}] {{title}} | {{url}}",
+            "list_template": " {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}"
         }
     }
 };

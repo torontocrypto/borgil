@@ -1,4 +1,6 @@
 var FeedParser = require('feedparser');
+var handlebars = require('handlebars');
+var irc = require('irc');
 var request = require('request');
 var util = require('util');
 
@@ -10,6 +12,21 @@ var intervalObj = null;
 
 
 module.exports = function (bot) {
+    // get mustache templates from config
+    var item_template;
+    try {
+        item_template = bot.config.plugins.rss.item_template;
+    } catch (e) {}
+    var render_item_template = handlebars.compile(item_template || '{{title}} | {{url}}');
+
+    var list_template;
+    try {
+        list_template = bot.config.plugins.list_template;
+    } catch (e) {}
+    var render_list_template = handlebars.compile(list_template || ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}');
+
+
+    // fetch a feed and reply with the latest entry
     function fetch(feed) {
         bot.log('Fetching feed "%s" from %s', feed.name, feed.url);
 
@@ -58,11 +75,27 @@ module.exports = function (bot) {
         })
         .once('readable', function () {
             item = this.read();
-            bot.say(feed.network, feed.target, util.format('%s | %s', item.title, item.link));
+
+            // template data
+            var data = {
+                title: item.title,
+                url: item.link,
+                name: feed.name,
+                color: feed.color,
+                colour: feed.color,
+            };
+
+            // add colors to template data
+            for (color in irc.colors.codes) {
+                data[color] = irc.colors.codes[color];
+            }
+
+            bot.say(feed.network, feed.target, render_item_template(data));
         });
     }
 
 
+    // fetch all saved feeds
     function fetchAll() {
         bot.log('Fetching RSS feeds...');
         feeds.forEach(function (feed) {
@@ -73,6 +106,8 @@ module.exports = function (bot) {
 
     bot.addCommand('rss', function (cmd) {
         switch(cmd.args[0]) {
+
+        case 'latest':
         case 'quick':
             fetch({
                 name: '',
@@ -83,32 +118,59 @@ module.exports = function (bot) {
 
             break;
 
+
         case 'add':
             var name = cmd.args[1],
-                url = cmd.args[2];
+                url = cmd.args[2],
+                color = cmd.args[3] || '';
 
+            if (!name || !url.match(/^https?:\/\/.+\..+/)) {
+                bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<colour>]');
+                break;
+            }
+
+            // check against existing feeds for this target
+            if (feeds.some(function (feed) {
+                if (feed.network == cmd.network && feed.target == cmd.replyto) {
+                    if (feed.name == name) {
+                        bot.say(cmd.network, cmd.replyto, 'A feed already exists with that name.');
+                        return true;
+                    }
+                    else if (feed.url == url) {
+                        bot.say(cmd.network, cmd.replyto, 'A feed already exists with that URL.');
+                        return true;
+                    }
+                }
+            })) break;
+
+            // add the feed to the list for this target
             feeds.push({
                 name: name,
                 url: url,
                 network: cmd.network,
                 target: cmd.replyto,
+                color: irc.colors.codes[color] || '',
+                colour: irc.colors.codes[color] || '',
             });
             bot.say(cmd.network, cmd.replyto, 'Added 1 feed.');
 
             break;
 
+
         case 'del':
         case 'delete':
         case 'remove':
         case 'rm':
+            var count = feeds.length;
             feeds = feeds.filter(function (feed) {
-                if (cmd.args[1] == feed.name || cmd.args[1] == feed.url) {
-                    bot.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
-                }
-                else return true;
+                return (cmd.args[1] != feed.name && cmd.args[1] != feed.url);
             });
 
+            var removed = count - feeds.length;
+            if (removed) bot.say(cmd.network, cmd.replyto, 'Removed %d feed%s.', removed, removed > 1 ? 's' : '');
+
             break;
+
 
         case 'list':
             var all = cmd.args[1] == 'all';
@@ -121,10 +183,16 @@ module.exports = function (bot) {
                 util.format('Found %d feeds for %s/%s.', feedlist.length, cmd.network, cmd.replyto));
 
             feedlist.forEach(function (feed) {
-                bot.say(cmd.network, cmd.replyto, util.format('  %s %s %s %s', feed.network, feed.target, feed.name, feed.url));
+                // add colors to feed info for use as template data
+                for (color in irc.colors.codes) {
+                    feed[color] = irc.colors.codes[color];
+                }
+
+                bot.say(cmd.network, cmd.replyto, render_list_template(feed));
             });
 
             break;
+
 
         case 'fetch':
             feeds.forEach(function (feed) {
@@ -134,12 +202,12 @@ module.exports = function (bot) {
 
             break;
 
+
         case 'start':
             var interval = defaultInterval;
             try {
                 interval = parseInt(bot.config.plugins.rss.interval);
             } catch (e) {}
-
 
             if (!intervalObj) {
                 bot.say(cmd.network, cmd.replyto, util.format('Starting to fetch feeds every %d minutes.', interval));
@@ -150,6 +218,7 @@ module.exports = function (bot) {
             }
 
             break;
+
 
         case 'stop':
             if (intervalObj) {

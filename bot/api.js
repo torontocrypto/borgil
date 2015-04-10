@@ -5,6 +5,8 @@ var API = module.exports = function (bot, plugin_name) {
     this._bot = bot;
     this._plugin = plugin_name;
 
+    this.config = bot.config;
+
     require('../plugins/' + plugin_name).call(this, this);
 };
 
@@ -15,7 +17,7 @@ function callPlugin(api, callback, arg) {
         callback.call(api, arg);
     }
     catch (e) {
-        api._bot.log.error('Error in plugin %s: %s', api._plugin, e.message);
+        api._bot.log.error('Error in plugin %s:', api._plugin, e.message);
     }
 }
 
@@ -82,7 +84,7 @@ API.prototype.say = function (network, target) {
 
 // Add a line to the log
 API.prototype.log = function () {
-    this._bot.log.info(this._plugin, '-', util.format.apply(null, arguments));
+    this._bot.log.info(this._plugin + ':', util.format.apply(null, arguments));
 };
 
 

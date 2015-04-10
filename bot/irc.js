@@ -23,7 +23,7 @@ module.exports = function () {
             if (eventType == 'error') {
                 // emit errors at the bot level only
                 var msg = arguments[1];
-                bot.log.error('Error on client %s: %s', this.__network, msg.command.toUpperCase(), msg.args);
+                bot.log.error('Error on client %s:', this.__network, msg.command.toUpperCase(), msg.args);
             }
             else {
                 // emit the event at the bot level
@@ -33,6 +33,6 @@ module.exports = function () {
                 // emit the event at the client level as normal
                 selfEmit.apply(this, arguments);
             }
-        }
+        };
     }
 };
