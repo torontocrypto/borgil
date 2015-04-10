@@ -33,8 +33,4 @@ module.exports = function () {
             this.log.debug('%s: <-', client.__network, msg.rawCommand, msg.command.toUpperCase(), msg.nick || '', msg.args);
         });
     }
-
-    this.addListener('error', function (err) {
-        this.log.error(err);
-    });
 };
