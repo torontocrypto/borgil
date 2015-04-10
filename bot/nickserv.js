@@ -2,6 +2,9 @@ function checkForIdentifySuccess(nick, target, text, msg) {
     if (nick == 'NickServ' && target == this.__config.nick && text.indexOf('You are successfully identified') > -1) {
         // join all nickserv-only channels
         this.__config.nickserv_channels.forEach(function (channel) {
+            if (channel in this.__config.nickserv_channel_keywords) {
+                channel += ' ' + this.__config.nickserv_channel_keywords[channel];
+            }
             this.join(channel);
         }, this);
     }
