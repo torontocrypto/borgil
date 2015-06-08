@@ -5,6 +5,9 @@ module.exports = {
     "logconsole": true,
     "logfile": "raw.log",
     "dbdir": "db",
+    "admins": [
+        "saltire"
+    ],
     "networks": {
         "oftc": {
             "host": "irc.oftc.net",

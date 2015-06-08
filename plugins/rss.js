@@ -186,8 +186,8 @@ module.exports = function (bot) {
 
 
         case 'list':
-            // TODO: make the 'all' option admin-only
-            var all = cmd.args[1] == 'all';
+            // show feeds from all channels (admin only)
+            var all = cmd.args[1] == 'all' && (bot.config.admins || []).indexOf(cmd.nick) > -1;
 
             db.find(all ? {} : {
                 network: cmd.network,
