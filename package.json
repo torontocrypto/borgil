@@ -2,14 +2,18 @@
   "name": "borgil",
   "version": "1.0.0",
   "description": "An IRC bot that echoes messages between channels and networks.",
-  "main": "borgil.js",
+  "main": "bot/bot.js",
+  "scripts": {
+    "start": "node borgil.js"
+  },
   "dependencies": {
     "cheerio": "~0.19.0",
     "entities": "^1.1.1",
-    "feedparser": "^1.0.0",
-    "handlebars": "^3.0.1",
-    "irc": "^0.3.8",
-    "request": "^2.53.0",
+    "feedparser": "^1.1.2",
+    "handlebars": "^3.0.3",
+    "irc": "^0.3.12",
+    "nedb": "^1.1.2",
+    "request": "^2.57.0",
     "winston": "^0.9.0"
   },
   "devDependencies": {},

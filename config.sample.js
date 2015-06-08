@@ -4,6 +4,7 @@ module.exports = {
     "buffer": 100,
     "logconsole": true,
     "logfile": "raw.log",
+    "dbdir": "db",
     "networks": {
         "oftc": {
             "host": "irc.oftc.net",

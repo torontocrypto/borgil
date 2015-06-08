@@ -1,17 +1,23 @@
 var FeedParser = require('feedparser');
 var handlebars = require('handlebars');
 var irc = require('irc');
+var DataStore = require('nedb');
+var path = require('path');
 var request = require('request');
 var util = require('util');
 
 
-var feeds = [];
-
 var defaultInterval = 10;
+var interval = defaultInterval;
 var intervalObj = null;
 
 
 module.exports = function (bot) {
+    var db = new DataStore({
+        filename: path.join(this.config.dbdir, 'rss.db'),
+        autoload: true,
+    });
+
     // get mustache templates from config
     var item_template;
     try {
@@ -23,24 +29,27 @@ module.exports = function (bot) {
     try {
         list_template = bot.config.plugins.list_template;
     } catch (e) {}
-    var render_list_template = handlebars.compile(list_template || ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}');
+    var render_list_template = handlebars.compile(list_template ||
+        ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}');
 
 
     // fetch a feed and reply with the latest entry
-    function fetch(feed) {
+    function fetch(feed, ignoreCache) {
         bot.log('Fetching feed "%s" from %s', feed.name, feed.url);
 
         var parser = new FeedParser({});
 
         // add cache validation headers
         var headers = {};
-        if (feed.etag) {
-            bot.log('Sending saved etag %s for feed "%s"', feed.etag, feed.name);
-            headers['If-None-Match'] = feed.etag;
-        }
-        if (feed.last_modified) {
-            bot.log('Sending saved last-modified date "%s" for feed "%s"', feed.last_modified, feed.name);
-            headers['If-Modified-Since'] = feed.last_modified;
+        if (!ignoreCache) {
+            if (feed.etag) {
+                bot.log('Sending saved etag %s for feed "%s"', feed.etag, feed.name);
+                headers['If-None-Match'] = feed.etag;
+            }
+            if (feed.last_modified) {
+                bot.log('Sending saved last-modified date "%s" for feed "%s"', feed.last_modified, feed.name);
+                headers['If-Modified-Since'] = feed.last_modified;
+            }
         }
 
         request.get({
@@ -57,14 +66,24 @@ module.exports = function (bot) {
             if (res.statusCode != 200) return this.emit('error', new Error('Bad RSS status code: ' + res.statusCode));
 
             // save cache validation headers
+            var update = {};
             if (res.headers.etag) {
                 bot.log('Saving etag %s for feed "%s"', res.headers.etag, feed.name);
-                feed.etag = res.headers.etag;
+                update.etag = res.headers.etag;
             }
             if (res.headers['last-modified']) {
                 bot.log('Saving last-modified date "%s" for feed "%s"', res.headers['last-modified'], feed.name);
-                feed.last_modified = res.headers['last-modified'];
+                update.last_modified = res.headers['last-modified'];
             }
+            db.update({
+                network: feed.network,
+                target: feed.target,
+                name: feed.name,
+            }, {
+                $set: update,
+            }, {}, function (err, count) {
+                if (count) bot.log('Successfully saved cache headers for feed %s', feed.name);
+            });
 
             this.pipe(parser);
         });
@@ -82,7 +101,6 @@ module.exports = function (bot) {
                 url: item.link,
                 name: feed.name,
                 color: feed.color,
-                colour: feed.color,
             };
 
             // add colors to template data
@@ -91,15 +109,6 @@ module.exports = function (bot) {
             }
 
             bot.say(feed.network, feed.target, render_item_template(data));
-        });
-    }
-
-
-    // fetch all saved feeds
-    function fetchAll() {
-        bot.log('Fetching RSS feeds...');
-        feeds.forEach(function (feed) {
-            fetch(feed);
         });
     }
 
@@ -125,34 +134,35 @@ module.exports = function (bot) {
                 color = cmd.args[3] || '';
 
             if (!name || !url.match(/^https?:\/\/.+\..+/)) {
-                bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<colour>]');
+                bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
                 break;
             }
 
-            // check against existing feeds for this target
-            if (feeds.some(function (feed) {
-                if (feed.network == cmd.network && feed.target == cmd.replyto) {
-                    if (feed.name == name) {
-                        bot.say(cmd.network, cmd.replyto, 'A feed already exists with that name.');
-                        return true;
-                    }
-                    else if (feed.url == url) {
-                        bot.say(cmd.network, cmd.replyto, 'A feed already exists with that URL.');
-                        return true;
-                    }
-                }
-            })) break;
-
-            // add the feed to the list for this target
-            feeds.push({
-                name: name,
-                url: url,
+            db.find({
                 network: cmd.network,
                 target: cmd.replyto,
-                color: irc.colors.codes[color] || '',
-                colour: irc.colors.codes[color] || '',
+                $or: [
+                    {name: name},
+                    {url: url},
+                ],
+            }, function (err, feeds) {
+                // check against existing feeds for this target
+                if (feeds.length) {
+                    bot.say(cmd.network, cmd.replyto,
+                        'A feed already exists with that %s.', feeds[0].name == name ? 'name' : 'URL');
+                }
+                else {
+                    // add the feed to the list for this target
+                    db.insert({
+                        name: name,
+                        url: url,
+                        network: cmd.network,
+                        target: cmd.replyto,
+                        color: irc.colors.codes[color] || '',
+                    });
+                    bot.say(cmd.network, cmd.replyto, 'Added 1 feed.');
+                }
             });
-            bot.say(cmd.network, cmd.replyto, 'Added 1 feed.');
 
             break;
 
@@ -161,60 +171,84 @@ module.exports = function (bot) {
         case 'delete':
         case 'remove':
         case 'rm':
-            var count = feeds.length;
-            feeds = feeds.filter(function (feed) {
-                return (cmd.args[1] != feed.name && cmd.args[1] != feed.url);
+            db.remove({
+                network: cmd.network,
+                target: cmd.replyto,
+                $or: [
+                    {name: name},
+                    {url: url},
+                ],
+            }, function (err, count) {
+                if (count) bot.say(cmd.network, cmd.replyto, 'Removed %d feed%s.', removed, removed > 1 ? 's' : '');
             });
-
-            var removed = count - feeds.length;
-            if (removed) bot.say(cmd.network, cmd.replyto, 'Removed %d feed%s.', removed, removed > 1 ? 's' : '');
 
             break;
 
 
         case 'list':
+            // TODO: make the 'all' option admin-only
             var all = cmd.args[1] == 'all';
-            var feedlist = all ? feeds : feeds.filter(function (feed) {
-                return cmd.network == feed.network && cmd.replyto == feed.target;
-            });
 
-            bot.say(cmd.network, cmd.replyto, all ?
-                util.format('Found %d feeds in total.', feedlist.length) :
-                util.format('Found %d feeds for %s/%s.', feedlist.length, cmd.network, cmd.replyto));
+            db.find(all ? {} : {
+                network: cmd.network,
+                target: cmd.replyto,
+            }, function (err, feeds) {
+                bot.say(cmd.network, cmd.replyto, all ?
+                    util.format('Found %d feeds in total.', feeds.length) :
+                    util.format('Found %d feeds for %s/%s.', feeds.length, cmd.network, cmd.replyto));
 
-            feedlist.forEach(function (feed) {
-                // add colors to feed info for use as template data
-                for (color in irc.colors.codes) {
-                    feed[color] = irc.colors.codes[color];
-                }
+                feeds.forEach(function (feed) {
+                    // add colors to feed info for use as template data
+                    for (color in irc.colors.codes) {
+                        feed[color] = irc.colors.codes[color];
+                    }
 
-                bot.say(cmd.network, cmd.replyto, render_list_template(feed));
+                    bot.say(cmd.network, cmd.replyto, render_list_template(feed));
+                });
             });
 
             break;
 
 
         case 'fetch':
-            feeds.forEach(function (feed) {
-                if (cmd.network == feed.network && cmd.replyto == feed.target && (!cmd.args[1] || cmd.args[1] == 'all' || cmd.args[1] == feed.name))
-                    fetch(feed);
+            var filter = {
+                network: cmd.network,
+                target: cmd.replyto,
+            };
+
+            if (cmd.args[1] && cmd.args[1] != 'all') {
+                filter.name = cmd.args[1];
+            }
+
+            db.find(filter, function (err, feeds) {
+                feeds.forEach(function (feed) {
+                    fetch(feed, true);
+                });
             });
 
             break;
 
 
         case 'start':
-            var interval = defaultInterval;
+            var newInterval = parseInt(cmd.args[1]);
+
             try {
-                interval = parseInt(bot.config.plugins.rss.interval);
+                interval = newInterval || parseInt(bot.config.plugins.rss.interval) || interval;
             } catch (e) {}
 
-            if (!intervalObj) {
+            if (!intervalObj || newInterval) {
                 bot.say(cmd.network, cmd.replyto, util.format('Starting to fetch feeds every %d minutes.', interval));
-                intervalObj = setInterval(fetchAll, interval * 60000);
+                intervalObj = setInterval(function () {
+                    bot.log('Fetching RSS feeds...');
+                    db.find({}, function (err, feeds) {
+                        feeds.forEach(function (feed) {
+                            fetch(feed);
+                        });
+                    });
+                }, interval * 60000);
             }
             else {
-                bot.say(cmd.network, cmd.replyto, util.format('Feeds are already being fetched every %d seconds.', interval));
+                bot.say(cmd.network, cmd.replyto, util.format('Feeds are already being fetched every %d minutes.', interval));
             }
 
             break;
