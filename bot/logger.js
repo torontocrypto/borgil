@@ -2,18 +2,19 @@ var winston = require('winston');
 
 
 module.exports = function () {
-    var level = this.config.debug ? 'debug' : 'info';
+    var level = this.config.get('debug') ? 'debug' : 'info',
+        logfile = this.config.get('logfile');
 
     var transports = [];
-    if (this.config.logfile) {
+    if (logfile) {
         transports.push(new winston.transports.File({
-            filename: this.config.logfile,
+            filename: logfile,
             json: false,
             level: level,
             timestamp: true,
         }));
     }
-    if (this.config.logconsole) {
+    if (this.config.get('logconsole')) {
         transports.push(new winston.transports.Console({
             colorize: true,
             level: level,
@@ -28,7 +29,7 @@ module.exports = function () {
 
     // log listeners
 
-    if (this.config.debug) {
+    if (level == 'debug') {
         this.addListener('raw', function (client, msg) {
             this.log.debug('%s: <-', client.__network, msg.rawCommand, msg.command.toUpperCase(), msg.nick || '', msg.args);
         });

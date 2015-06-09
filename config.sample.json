@@ -1,4 +1,4 @@
-module.exports = {
+{
     "debug": false,
     "commandchar": ".",
     "buffer": 100,
@@ -44,4 +44,4 @@ module.exports = {
             "list_template": " {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}"
         }
     }
-};
+}

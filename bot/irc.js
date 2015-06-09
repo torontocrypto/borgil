@@ -4,8 +4,9 @@ var util = require('util');
 
 module.exports = function () {
     // create a client instance for each network in the config
-    for (var network in this.config.networks) {
-        var networkcfg = this.config.networks[network];
+    var networks = this.config.get('networks') || [];
+    for (var network in networks) {
+        var networkcfg = networks[network];
 
         // instantiate the client
         var client = this.clients[network] = new irc.Client(networkcfg.host, networkcfg.nick, networkcfg.opts);

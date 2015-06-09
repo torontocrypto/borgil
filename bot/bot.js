@@ -4,8 +4,7 @@ var util = require('util');
 var API = require('./api');
 
 
-var Bot = module.exports = function (config) {
-    this.config = config;
+var Bot = module.exports = function (configfile) {
     this.clients = {};
     this.plugins = {};
 
@@ -13,6 +12,7 @@ var Bot = module.exports = function (config) {
     EventEmitter.call(this);
 
     // include extra functionality
+    require('./config').call(this, configfile);
     require('./logger').call(this);
     require('./irc').call(this);
     require('./buffer').call(this);

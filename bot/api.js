@@ -59,7 +59,7 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     }).join('|');
 
     this._bot.addListener(type, function (client, nick, target, text, msg) {
-        var match = text.match('^' + api._bot.config.commandchar + '(' + command + ')(?:\\s+(.*?))?\\s*$');
+        var match = text.match('^' + api._bot.config.get('commandchar') + '(' + command + ')(?:\\s+(.*?))?\\s*$');
         if (match) {
             callPlugin(api, callback, {
                 network: client.__network,

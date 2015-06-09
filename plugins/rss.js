@@ -14,22 +14,15 @@ var intervalObj = null;
 
 module.exports = function (bot) {
     var db = new DataStore({
-        filename: path.join(this.config.dbdir, 'rss.db'),
+        filename: path.join(bot.config.get('dbdir'), 'rss.db'),
         autoload: true,
     });
 
     // get mustache templates from config
-    var item_template;
-    try {
-        item_template = bot.config.plugins.rss.item_template;
-    } catch (e) {}
-    var render_item_template = handlebars.compile(item_template || '{{title}} | {{url}}');
+    var render_item_template = handlebars.compile(bot.config.get('plugins.rss.item_template') ||
+        '{{title}} | {{url}}');
 
-    var list_template;
-    try {
-        list_template = bot.config.plugins.list_template;
-    } catch (e) {}
-    var render_list_template = handlebars.compile(list_template ||
+    var render_list_template = handlebars.compile(bot.config.get('plugins.rss.list_template') ||
         ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}');
 
 
@@ -187,7 +180,7 @@ module.exports = function (bot) {
 
         case 'list':
             // show feeds from all channels (admin only)
-            var all = cmd.args[1] == 'all' && (bot.config.admins || []).indexOf(cmd.nick) > -1;
+            var all = cmd.args[1] == 'all' && (bot.config.get('admins') || []).indexOf(cmd.nick) > -1;
 
             db.find(all ? {} : {
                 network: cmd.network,
@@ -231,10 +224,7 @@ module.exports = function (bot) {
 
         case 'start':
             var newInterval = parseInt(cmd.args[1]);
-
-            try {
-                interval = newInterval || parseInt(bot.config.plugins.rss.interval) || interval;
-            } catch (e) {}
+            interval = newInterval || parseInt(bot.config.get('plugins.rss.interval')) || interval;
 
             if (!intervalObj || newInterval) {
                 bot.say(cmd.network, cmd.replyto, util.format('Starting to fetch feeds every %d minutes.', interval));
