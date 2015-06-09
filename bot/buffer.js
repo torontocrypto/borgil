@@ -1,3 +1,5 @@
+var default_buffer = 100;
+
 module.exports = function () {
     // create buffer objects for each client
     this.buffers = {};
@@ -15,7 +17,7 @@ module.exports = function () {
         }
         var buffer = this.buffers[client.__network][source];
 
-        if (buffer.length >= (this.config.get('buffer') || 100)) {
+        if (buffer.length >= (this.config.get('buffer') || default_buffer)) {
             buffer.pop();
         }
 

@@ -20,7 +20,9 @@
                 "realName": "Borgil of Menelvagor"
             },
             "nickserv_password": "password",
-            "nickserv_channels": ["#torontocrypto"],
+            "nickserv_channels": [
+                "#torontocrypto"
+            ],
             "nickserv_channel_keywords": {
                 "#torontocrypto": "keyword"
             }
@@ -33,15 +35,35 @@
                 "userName": "borgil",
                 "realName": "Borgil of Menelvagor"
             },
-            "nickserv_channels": ["#torontocrypto"],
+            "nickserv_channels": [
+                "#torontocrypto"
+            ],
             "nickserv_password": "password"
         }
     },
     "plugins": {
+        "broadcast": {
+            "broadcast_all": false,
+            "target_sets": [
+                [
+                    {
+                        "network": "oftc",
+                        "channel": "#torontocrypto"
+                    },
+                    {
+                        "network": "i2p",
+                        "channel": "#torontocrypto"
+                    }
+                ]
+            ]
+        },
         "rss": {
             "interval": 10,
             "item_template": "[{{color}}{{name}}{{reset}}] {{title}} | {{url}}",
             "list_template": " {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}"
+        },
+        "url": {
+            "template": "[ {{{title}}} ] - {{domain}}"
         },
         "youtube": {
             "api_key": "",

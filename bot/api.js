@@ -78,6 +78,8 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
 
 // Send a message to the specified target.
 API.prototype.say = function (network, target) {
+    if (!this._bot.clients[network]) return;
+
     var text = util.format.apply(null, Array.prototype.slice.call(arguments, 2));
     this._bot.clients[network].say(target, text);
 };
@@ -85,13 +87,13 @@ API.prototype.say = function (network, target) {
 
 // Add a line to the log
 API.prototype.log = function () {
-    this._bot.log.info(this._plugin + ':', util.format.apply(null, arguments));
+    this._bot.log.info('%s:', this._plugin, util.format.apply(null, arguments));
 };
 
 
 // Add an error to the log
 API.prototype.error = function () {
-    this._bot.log.error(this._plugin + ':', util.format.apply(null, arguments));
+    this._bot.log.error('%s:', this._plugin, util.format.apply(null, arguments));
 };
 
 

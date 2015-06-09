@@ -173,8 +173,9 @@ module.exports = function (bot) {
                         network: cmd.network,
                         target: cmd.replyto,
                         color: irc.colors.codes[color] || '',
+                    }, function (err, feed) {
+                        if (feed) bot.say(cmd.network, cmd.replyto, 'Added 1 feed.');
                     });
-                    bot.say(cmd.network, cmd.replyto, 'Added 1 feed.');
                 }
             });
 
