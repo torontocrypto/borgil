@@ -42,6 +42,11 @@
             "interval": 10,
             "item_template": "[{{color}}{{name}}{{reset}}] {{title}} | {{url}}",
             "list_template": " {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}"
+        },
+        "youtube": {
+            "api_key": "",
+            "url_template": "[YouTube] {{{title}}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}",
+            "search_template": "[YouTube] {{{title}}} | {{url}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}"
         }
     }
 }

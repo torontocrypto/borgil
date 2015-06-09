@@ -6,6 +6,7 @@ var API = module.exports = function (bot, plugin_name) {
     this._plugin = plugin_name;
 
     this.config = bot.config;
+    this.memory = bot.memory;
 
     require('../plugins/' + plugin_name).call(this, this);
 };
@@ -85,6 +86,12 @@ API.prototype.say = function (network, target) {
 // Add a line to the log
 API.prototype.log = function () {
     this._bot.log.info(this._plugin + ':', util.format.apply(null, arguments));
+};
+
+
+// Add an error to the log
+API.prototype.error = function () {
+    this._bot.log.error(this._plugin + ':', util.format.apply(null, arguments));
 };
 
 

@@ -7,6 +7,7 @@ var API = require('./api');
 var Bot = module.exports = function (configfile) {
     this.clients = {};
     this.plugins = {};
+    this.memory = {};
 
     // run the event emitter constructor
     EventEmitter.call(this);

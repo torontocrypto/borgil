@@ -10,3 +10,4 @@ borgil.use('ddg-scraper');
 borgil.use('rss');
 borgil.use('sed');
 borgil.use('url');
+borgil.use('youtube');
