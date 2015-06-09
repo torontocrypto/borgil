@@ -4,12 +4,16 @@ var irc = require('irc');
 var DataStore = require('nedb');
 var path = require('path');
 var request = require('request');
-var util = require('util');
 
 
-var defaultInterval = 10;
-var interval = defaultInterval;
-var intervalObj = null;
+var defaults = {
+    interval: 10,
+    item_template: '[{{color}}{{name}}{{reset}}] {{title}} | {{url}}',
+    list_template: ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}'
+};
+
+var interval;
+var intervalObj;
 
 
 module.exports = function (bot) {
@@ -18,21 +22,11 @@ module.exports = function (bot) {
         autoload: true,
     });
 
-    // get mustache templates from config
-    var render_item_template = handlebars.compile(bot.config.get('plugins.rss.item_template') ||
-        '{{title}} | {{url}}');
-
-    var render_list_template = handlebars.compile(bot.config.get('plugins.rss.list_template') ||
-        ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}');
-
-
     // fetch a feed and reply with the latest entry
     function fetch(feed, ignoreCache) {
         bot.log('Fetching feed "%s" from %s', feed.name, feed.url);
 
-        var parser = new FeedParser({});
-
-        // add cache validation headers
+        // build cache validation headers
         var headers = {};
         if (!ignoreCache) {
             if (feed.etag) {
@@ -44,6 +38,9 @@ module.exports = function (bot) {
                 headers['If-Modified-Since'] = feed.last_modified;
             }
         }
+
+        var parser = new FeedParser({});
+        var render_item_template = handlebars.compile(bot.config.get('plugins.rss.item_template') || defaults.item_template);
 
         request.get({
             url: feed.url,
@@ -106,6 +103,22 @@ module.exports = function (bot) {
     }
 
 
+    function findFeeds(cmd, callback) {
+        var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
+
+        // fetch feeds from all channels (admin only)
+        var all = args[1] == 'all' && (bot.config.get('admins') || []).indexOf(cmd.nick) > -1;
+
+        var filter = {
+            network: cmd.network,
+            target: cmd.replyto,
+        };
+        if (args[1] && args[1] != 'all') filter.name = args[1].replace(/^"|"$/g, '');
+
+        db.find(all ? {} : filter, callback);
+    }
+
+
     bot.addCommand('rss', function (cmd) {
         switch(cmd.args[0]) {
 
@@ -122,14 +135,22 @@ module.exports = function (bot) {
 
 
         case 'add':
-            var name = cmd.args[1],
-                url = cmd.args[2],
-                color = cmd.args[3] || '';
+            var args = cmd.text.match(/^\S+\s+("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
 
-            if (!name || !url.match(/^https?:\/\/.+\..+/)) {
+            if (!args) {
                 bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
                 break;
             }
+
+            var name = args[1],
+                url = args[2],
+                color = args[3] || '';
+
+            if (name == 'all') {
+                bot.say(cmd.network, cmd.replyto, 'Invalid feed name.');
+                break;
+            }
+            name = name.replace(/^"|"$/g, '');
 
             db.find({
                 network: cmd.network,
@@ -164,31 +185,26 @@ module.exports = function (bot) {
         case 'delete':
         case 'remove':
         case 'rm':
-            db.remove({
-                network: cmd.network,
-                target: cmd.replyto,
-                $or: [
-                    {name: name},
-                    {url: url},
-                ],
-            }, function (err, count) {
-                if (count) bot.say(cmd.network, cmd.replyto, 'Removed %d feed%s.', removed, removed > 1 ? 's' : '');
-            });
+            var args = cmd.text.match(/^\S+\s+("[^"]+"|[\w-]+)?/);
+
+            if (args[1]) {
+                db.remove({
+                    network: cmd.network,
+                    target: cmd.replyto,
+                    name: args[1].replace(/^"|"$/g, ''),
+                }, function (err, count) {
+                    if (count) bot.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
+                });
+            }
 
             break;
 
 
         case 'list':
-            // show feeds from all channels (admin only)
-            var all = cmd.args[1] == 'all' && (bot.config.get('admins') || []).indexOf(cmd.nick) > -1;
+            findFeeds(cmd, function (err, feeds) {
+                bot.say(cmd.network, cmd.replyto, 'Found %d feed%s.', feeds.length, feeds.length == 1 ? '' : 's');
 
-            db.find(all ? {} : {
-                network: cmd.network,
-                target: cmd.replyto,
-            }, function (err, feeds) {
-                bot.say(cmd.network, cmd.replyto, all ?
-                    util.format('Found %d feeds in total.', feeds.length) :
-                    util.format('Found %d feeds for %s/%s.', feeds.length, cmd.network, cmd.replyto));
+                var render_list_template = handlebars.compile(bot.config.get('plugins.rss.list_template') || defaults.list_template);
 
                 feeds.forEach(function (feed) {
                     // add colors to feed info for use as template data
@@ -204,16 +220,7 @@ module.exports = function (bot) {
 
 
         case 'fetch':
-            var filter = {
-                network: cmd.network,
-                target: cmd.replyto,
-            };
-
-            if (cmd.args[1] && cmd.args[1] != 'all') {
-                filter.name = cmd.args[1];
-            }
-
-            db.find(filter, function (err, feeds) {
+            findFeeds(cmd, function (err, feeds) {
                 feeds.forEach(function (feed) {
                     fetch(feed, true);
                 });
@@ -224,10 +231,10 @@ module.exports = function (bot) {
 
         case 'start':
             var newInterval = parseInt(cmd.args[1]);
-            interval = newInterval || parseInt(bot.config.get('plugins.rss.interval')) || interval;
+            interval = newInterval || parseInt(bot.config.get('plugins.rss.interval')) || interval || defaults.interval;
 
             if (!intervalObj || newInterval) {
-                bot.say(cmd.network, cmd.replyto, util.format('Starting to fetch feeds every %d minutes.', interval));
+                bot.say(cmd.network, cmd.replyto, 'Starting to fetch feeds every %d minutes.', interval);
                 intervalObj = setInterval(function () {
                     bot.log('Fetching RSS feeds...');
                     db.find({}, function (err, feeds) {
@@ -238,7 +245,7 @@ module.exports = function (bot) {
                 }, interval * 60000);
             }
             else {
-                bot.say(cmd.network, cmd.replyto, util.format('Feeds are already being fetched every %d minutes.', interval));
+                bot.say(cmd.network, cmd.replyto, 'Feeds are already being fetched every %d minutes.', interval);
             }
 
             break;
@@ -252,6 +259,14 @@ module.exports = function (bot) {
             }
 
             break;
+
+
+        case 'colors':
+        case 'colours':
+            bot.say(cmd.network, cmd.replyto, 'Available colors:', Object.keys(irc.colors.codes).join(', '));
+
+            break;
+
 
         default:
             break;
