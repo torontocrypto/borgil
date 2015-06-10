@@ -58,8 +58,9 @@
             ]
         },
         "rss": {
+            "autostart": false,
             "interval": 10,
-            "item_template": "[{{color}}{{name}}{{reset}}] {{title}} | {{url}}",
+            "item_template": "[{{color}}{{name}}{{reset}}] {{{title}}} | {{url}}",
             "list_template": " {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}"
         },
         "url": {
