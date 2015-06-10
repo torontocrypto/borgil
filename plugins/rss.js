@@ -1,3 +1,4 @@
+var Entities = require('html-entities').AllHtmlEntities;
 var extend = require('extend');
 var FeedParser = require('feedparser');
 var handlebars = require('handlebars');
@@ -16,6 +17,7 @@ var defaults = {
 var interval;
 var intervalObj;
 
+var entities = new Entities();
 
 module.exports = function (bot) {
     var db = new DataStore({
@@ -93,7 +95,7 @@ module.exports = function (bot) {
             if (feed.name) {
                 // a set of properties to compare with the last item
                 var latest = {
-                    title: item.title,
+                    title: entities.decode(item.title),
                     url: item.link,
                 };
 
@@ -121,7 +123,7 @@ module.exports = function (bot) {
 
             // template data, including color codes
             var data = extend({
-                title: item.title,
+                title: entities.decode(item.title),
                 url: item.link,
                 name: feed.name,
                 color: feed.color,
