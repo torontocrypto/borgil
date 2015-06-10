@@ -1,8 +1,11 @@
 var handlebars = require('handlebars');
+var Entities = require('html-entities').AllHtmlEntities;
 var request = require('request');
 
 
 var default_template = '[ {{{title}}} ] - {{domain}}';
+
+var entities = new Entities();
 
 module.exports = function (bot) {
     // fetch title for URLs and echo it into the channel
@@ -23,7 +26,7 @@ module.exports = function (bot) {
                 var render_template = handlebars.compile(bot.config.get('plugins.url.template') || default_template);
                 bot.say(msg.network, msg.replyto, render_template({
                     domain: domain,
-                    title: t[1],
+                    title: entities.decode(t[1]),
                     url: url,
                 }));
             }
