@@ -27,7 +27,6 @@ module.exports = function (bot) {
             type: 'key',
             key: apiKey,
         });
-
         youtube.videos.list({
             part: 'id,snippet,contentDetails,statistics',
             id: id,
@@ -61,8 +60,10 @@ module.exports = function (bot) {
 
 
     bot.listen('message', url_pattern, function (msg) {
+        bot.log('Got YouTube URL:', msg.match[0]);
         getVideo(msg.match[1], function (data) {
             var render_template = handlebars.compile(bot.config.get('plugins.youtube.url_template') || defaults.url_template);
+            bot.log('Echoing YouTube info for', data.url);
             bot.say(msg.network, msg.replyto, render_template(data));
         });
     });
@@ -71,11 +72,12 @@ module.exports = function (bot) {
         var apiKey = bot.config.get('plugins.youtube.api_key');
         if (!apiKey || !cmd.text) return;
 
+        bot.log('Got YouTube search:', cmd.text);
+
         youtube.authenticate({
             type: 'key',
             key: apiKey,
         });
-
         youtube.search.list({
             part: 'id',
             q: cmd.text,
@@ -87,6 +89,7 @@ module.exports = function (bot) {
 
             getVideo(result.items[0].id.videoId, function (data) {
                 var render_template = handlebars.compile(bot.config.get('plugins.youtube.search_template') || defaults.search_template);
+                bot.log('Echoing YouTube info for', data.url);
                 bot.say(cmd.network, cmd.replyto, render_template(data));
             });
         });

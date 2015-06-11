@@ -57,6 +57,9 @@
                 ]
             ]
         },
+        "ddg-scraper": {
+            "template": "[DDG] {{{title}}} | {{url}}"
+        },
         "rss": {
             "autostart": false,
             "interval": 10,

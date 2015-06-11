@@ -12,7 +12,7 @@ var API = module.exports = function (bot, plugin_name) {
 };
 
 
-// a wrapper for the plugin caller, with error handling
+// A wrapper for the plugin caller, with error handling.
 function callPlugin(api, callback, arg) {
     try {
         callback.call(api, arg);
@@ -27,6 +27,7 @@ function callPlugin(api, callback, arg) {
 API.prototype.listen = function (type, pattern, callback) {
     var api = this;
 
+    // Add a listener for channel or private messages.
     if (['message', 'message#', 'pm'].indexOf(type) > -1) {
         this._bot.addListener(type, function (client, nick, target, text, msg) {
             var match = text.match(pattern);
@@ -59,8 +60,12 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
         return typeof cmd == 'string' && cmd;
     }).join('|');
 
+    // Get the character/string that precedes commands, escape it for regex, and build the pattern.
+    var commandchar = (api._bot.config.get('commandchar') || '.').replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    var pattern = '^' + commandchar + '(' + command + ')(?:\\s+(.*?))?\\s*$';
+
     this._bot.addListener(type, function (client, nick, target, text, msg) {
-        var match = text.match('^' + api._bot.config.get('commandchar') + '(' + command + ')(?:\\s+(.*?))?\\s*$');
+        var match = text.match(pattern);
         if (match) {
             callPlugin(api, callback, {
                 network: client.__network,
