@@ -46,6 +46,14 @@ API.prototype.listen = function (type, pattern, callback) {
 };
 
 
+// Check if a message is a command, and return a match object if it does.
+API.prototype.matchCommand = function (text) {
+    // Get the character/string that precedes commands and escape it for regex.
+    var commandchar = (this.config.get('commandchar') || '.').replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    return text.match('^' + commandchar + '(\\S+)(?:\\s+(.*?))?\\s*$');
+}
+
+
 // Add a listener for a particular command.
 API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePublic) {
     var api = this;
@@ -60,13 +68,9 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
         return typeof cmd == 'string' && cmd;
     }).join('|');
 
-    // Get the character/string that precedes commands, escape it for regex, and build the pattern.
-    var commandchar = (api._bot.config.get('commandchar') || '.').replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-    var pattern = '^' + commandchar + '(' + command + ')(?:\\s+(.*?))?\\s*$';
-
     this._bot.addListener(type, function (client, nick, target, text, msg) {
-        var match = text.match(pattern);
-        if (match) {
+        var match = api.matchCommand(text);
+        if (match && match[1] == command) {
             callPlugin(api, callback, {
                 network: client.__network,
                 nick: nick,
