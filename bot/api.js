@@ -64,13 +64,13 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     else if (ignorePublic) type = 'pm';
 
     if (!command) return;
-    if (util.isArray(command)) command = command.filter(function (cmd) {
+    var commands = [].concat(command).filter(function (cmd) {
         return typeof cmd == 'string' && cmd;
-    }).join('|');
+    });
 
     this._bot.addListener(type, function (client, nick, target, text, msg) {
         var match = api.matchCommand(text);
-        if (match && match[1] == command) {
+        if (match && commands.indexOf(match[1]) > -1) {
             callPlugin(api, callback, {
                 network: client.__network,
                 nick: nick,
