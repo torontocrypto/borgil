@@ -33,5 +33,8 @@ module.exports = function () {
         this.addListener('raw', function (client, msg) {
             this.log.debug('%s: <-', client.__network, msg.rawCommand, msg.command.toUpperCase(), msg.nick || '', msg.args);
         });
+        this.addListener('selfMessage', function (client, target, text) {
+            this.log.debug('%s: -> %s:', client.__network, target, text);
+        });
     }
 };
