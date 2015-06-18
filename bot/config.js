@@ -35,8 +35,9 @@ module.exports = function (configfile) {
     var config = JSON.parse(fs.readFileSync(configfile, {encoding: 'utf-8'}));
 
     this.config = {
-        get: function (path) {
-            return getValue(config, Array.isArray(path) ? path : path.split('.'));
+        get: function (path, defval) {
+            var value = getValue(config, Array.isArray(path) ? path : path.split('.'));
+            return value !== undefined ? value : defval;
         },
 
         set: function (path, value) {

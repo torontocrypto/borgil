@@ -4,7 +4,7 @@ var util = require('util');
 
 module.exports = function () {
     // create a client instance for each network in the config
-    var networks = this.config.get('networks') || [];
+    var networks = this.config.get('networks', []);
     for (var network in networks) {
         var networkcfg = networks[network];
 

@@ -4,7 +4,7 @@ var path = require('path');
 
 module.exports = function (bot) {
     var db = new DataStore({
-        filename: path.join(bot.config.get('dbdir'), 'quote.db'),
+        filename: path.join(bot.config.get('dbdir', ''), 'quote.db'),
         autoload: true,
     });
 

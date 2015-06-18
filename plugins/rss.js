@@ -21,7 +21,7 @@ var entities = new Entities();
 
 module.exports = function (bot) {
     var db = new DataStore({
-        filename: path.join(bot.config.get('dbdir'), 'rss.db'),
+        filename: path.join(bot.config.get('dbdir', ''), 'rss.db'),
         autoload: true,
     });
 
@@ -43,7 +43,7 @@ module.exports = function (bot) {
         }
 
         var parser = new FeedParser({});
-        var render_item_template = handlebars.compile(bot.config.get('plugins.rss.item_template') || defaults.item_template);
+        var render_item_template = handlebars.compile(bot.config.get('plugins.rss.item_template', defaults.item_template));
 
         request.get({
             url: feed.url,
@@ -56,7 +56,7 @@ module.exports = function (bot) {
             bot.log('[%s] Received %d response', feed.name, res.statusCode);
 
             if (res.statusCode == 304) return;
-            if (res.statusCode != 200) return this.emit('error', new Error('Bad status code %d from RSS feed', res.statusCode, feed.name));
+            if (res.statusCode != 200) return bot.error('Bad status code %d from RSS feed', res.statusCode, feed.name);
 
             if (feed.name) {
                 // save cache validation headers
@@ -139,7 +139,7 @@ module.exports = function (bot) {
         var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
 
         // fetch feeds from all channels (admin only)
-        var all = args[1] == 'all' && (bot.config.get('admins') || []).indexOf(cmd.nick) > -1;
+        var all = args[1] == 'all' && bot.config.get('admins', []).indexOf(cmd.nick) > -1;
 
         var filter = {
             network: cmd.network,
@@ -259,7 +259,7 @@ module.exports = function (bot) {
             findFeeds(cmd, function (err, feeds) {
                 bot.say(cmd.network, cmd.replyto, 'Found %d feed%s.', feeds.length, feeds.length == 1 ? '' : 's');
 
-                var render_list_template = handlebars.compile(bot.config.get('plugins.rss.list_template') || defaults.list_template);
+                var render_list_template = handlebars.compile(bot.config.get('plugins.rss.list_template', defaults.list_template));
 
                 feeds.forEach(function (feed) {
                     // add colors to feed info for use as template data

@@ -1,6 +1,6 @@
 var handlebars = require('handlebars');
 var moment = require('moment');
-var youtube = require('youtube-api');
+var youtube = require('googleapis').youtube('v3');
 
 
 var defaults = {
@@ -18,16 +18,12 @@ module.exports = function (bot) {
     if (!bot.memory.url_exclusions) bot.memory.url_exclusions = [];
     bot.memory.url_exclusions.push(url_pattern);
 
-
     function getVideo(id, callback) {
         var apiKey = bot.config.get('plugins.youtube.api_key');
         if (!apiKey) return;
 
-        youtube.authenticate({
-            type: 'key',
-            key: apiKey,
-        });
         youtube.videos.list({
+            auth: apiKey,
             part: 'id,snippet,contentDetails,statistics',
             id: id,
         }, function (err, result) {
@@ -45,7 +41,7 @@ module.exports = function (bot) {
                 title: video.snippet.title,
                 description: video.snippet.description,
                 url: 'https://www.youtube.com/watch?v=' + video.id,
-                date: moment(video.snippet.publishedAt).format(bot.config.get('plugins.youtube.date_format') || defaults.date_format),
+                date: moment(video.snippet.publishedAt).format(bot.config.get('plugins.youtube.date_format', defaults.date_format)),
                 channel: video.snippet.channelTitle,
                 tags: video.snippet.tags,
                 length: length,
@@ -58,11 +54,10 @@ module.exports = function (bot) {
         });
     }
 
-
     bot.listen('message', url_pattern, function (msg) {
         bot.log('Got YouTube URL:', msg.match[0]);
         getVideo(msg.match[1], function (data) {
-            var render_template = handlebars.compile(bot.config.get('plugins.youtube.url_template') || defaults.url_template);
+            var render_template = handlebars.compile(bot.config.get('plugins.youtube.url_template', defaults.url_template));
             bot.log('Echoing YouTube info for', data.url);
             bot.say(msg.network, msg.replyto, render_template(data));
         });
@@ -74,11 +69,8 @@ module.exports = function (bot) {
 
         bot.log('Got YouTube search:', cmd.text);
 
-        youtube.authenticate({
-            type: 'key',
-            key: apiKey,
-        });
         youtube.search.list({
+            auth: apiKey,
             part: 'id',
             q: cmd.text,
             type: 'video',
@@ -88,7 +80,7 @@ module.exports = function (bot) {
             if (!result.items || !result.items.length) return;
 
             getVideo(result.items[0].id.videoId, function (data) {
-                var render_template = handlebars.compile(bot.config.get('plugins.youtube.search_template') || defaults.search_template);
+                var render_template = handlebars.compile(bot.config.get('plugins.youtube.search_template', defaults.search_template));
                 bot.log('Echoing YouTube info for', data.url);
                 bot.say(cmd.network, cmd.replyto, render_template(data));
             });

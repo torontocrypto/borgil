@@ -24,7 +24,7 @@ module.exports = function (bot) {
         }
         else {
             // iterate through the configured sets of targets that will be broadcast to each other
-            (bot.config.get('plugins.broadcast.target_sets') || []).forEach(function (targets) {
+            bot.config.get('plugins.broadcast.target_sets', []).forEach(function (targets) {
                 // check that the received message's target is in this set
                 if (targets.some(function (target) {
                     return target.network == msg.network && target.channel == msg.replyto;
