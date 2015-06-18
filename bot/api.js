@@ -94,6 +94,21 @@ API.prototype.say = function (network, target) {
 };
 
 
+API.prototype.join = function (network, channel) {
+    if (!this._bot.clients[network]) return;
+
+    this._bot.clients[network].join(channel);
+};
+
+
+API.prototype.part = function (network, channel) {
+     if (!this._bot.clients[network]) return;
+     
+     var msg = util.format.apply(null, Array.prototype.slice.call(arguments, 2));
+     this._bot.clients[network].part(channel, msg);
+};
+
+
 // Add a line to the log
 API.prototype.log = function () {
     this._bot.log.info('%s:', this._plugin, util.format.apply(null, arguments));
