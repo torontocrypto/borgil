@@ -3,7 +3,9 @@ var fs = require('fs');
 module.exports = function (bot) {
     var resps = [];
 
-    fs.readFile('./plugins/eightball.txt', encoding='UTF-8', function (err, data) {
+    var filename = bot.config.get('plugins.eightball.response_file');
+
+    fs.readFile(filename, {encoding: 'UTF-8'}, function (err, data) {
         if (err) throw err;
         resps = data.split('\n');
         if (resps[resps.length - 1] === '') resps.pop();
