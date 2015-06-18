@@ -17,7 +17,7 @@ module.exports = function () {
         }
         var buffer = this.buffers[client.__network][source];
 
-        if (buffer.length >= (this.config.get('buffer') || default_buffer)) {
+        if (buffer.length >= this.config.get('buffer', default_buffer)) {
             buffer.pop();
         }
 

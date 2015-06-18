@@ -49,7 +49,7 @@ API.prototype.listen = function (type, pattern, callback) {
 // Check if a message is a command, and return a match object if it does.
 API.prototype.matchCommand = function (text) {
     // Get the character/string that precedes commands and escape it for regex.
-    var commandchar = (this.config.get('commandchar') || '.').replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    var commandchar = this.config.get('commandchar', '.').replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
     return text.match('^' + commandchar + '(\\S+)(?:\\s+(.*?))?\\s*$');
 }
 

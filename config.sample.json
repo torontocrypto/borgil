@@ -1,9 +1,13 @@
 {
-    "debug": false,
     "commandchar": ".",
     "buffer": 100,
-    "logconsole": true,
-    "logfile": "raw.log",
+    "log": {
+        "dir": "logs",
+        "filename": "borgil--{{date}}.log",
+        "date_format": "YYYY-MM-DD--HH-mm-ss",
+        "console": true,
+        "debug": false
+    },
     "dbdir": "db",
     "admins": [
         "saltire"

@@ -19,7 +19,7 @@ module.exports = function (bot) {
                     title: $result.text(),
                     url: $result.attr('href'),
                 };
-                var render_template = handlebars.compile(bot.config.get('plugins.ddg-scraper.template') || default_template);
+                var render_template = handlebars.compile(bot.config.get('plugins.ddg-scraper.template', default_template));
                 bot.log('Echoing search result:', data.url);
                 bot.say(cmd.network, cmd.replyto, render_template(data));
             }

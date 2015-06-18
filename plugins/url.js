@@ -29,7 +29,7 @@ module.exports = function (bot) {
                     title: entities.decode(t[1]),
                     url: url,
                 };
-                var render_template = handlebars.compile(bot.config.get('plugins.url.template') || default_template);
+                var render_template = handlebars.compile(bot.config.get('plugins.url.template', default_template));
                 bot.log('Echoing URL title:', data.title);
                 bot.say(msg.network, msg.replyto, render_template(data));
             }
