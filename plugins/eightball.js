@@ -7,7 +7,6 @@ module.exports = function (bot) {
         if (err) throw err;
         resps = data.split('\n');
         if (resps[resps.length - 1] === '') resps.pop();
-        console.log(resps);
     });
 
     bot.addCommand('8ball', function (cmd) {
