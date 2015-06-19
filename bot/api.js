@@ -94,6 +94,7 @@ API.prototype.say = function (network, target) {
 };
 
 
+// Join a channel
 API.prototype.join = function (network, channel) {
     if (!this._bot.clients[network]) return;
 
@@ -101,11 +102,19 @@ API.prototype.join = function (network, channel) {
 };
 
 
+// Leave a channel
 API.prototype.part = function (network, channel) {
      if (!this._bot.clients[network]) return;
      
      var msg = util.format.apply(null, Array.prototype.slice.call(arguments, 2));
      this._bot.clients[network].part(channel, msg);
+};
+
+
+// Get whois info for a nickname
+API.prototype.whois = function (network, nick, callback) {
+    if (!this._bot.clients[network]) return;
+    this._bot.clients[network].whois(nick, function (info) { callback(info); });
 };
 
 
