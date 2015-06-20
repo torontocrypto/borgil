@@ -22,12 +22,13 @@ function checkForAdmin(nick, network, bot, callback) {
 }
 
 module.exports = function (bot) {
-    
+    console.log("--");    
     bot.addCommand('join', function (cmd) {
         checkForAdmin(cmd.nick, cmd.network, bot, function (admin) {
             if (admin) {
                 var chan = cmd.args[0];
                 var p = cmd.args[1];
+                console.log("------");
 
                 if (!chan) return bot.say(cmd.network, cmd.replyto, 'Usage: .join <channel>');
                 if (p) { chan += ' '; chan += p; }
@@ -37,7 +38,7 @@ module.exports = function (bot) {
             }
         });
     });
-
+    console.log('==');
     bot.addCommand('part', function (cmd) {
         checkForAdmin(cmd.nick, cmd.network, bot, function (admin) {
             if (admin) {

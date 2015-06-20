@@ -8,6 +8,9 @@ var API = module.exports = function (bot, plugin_name) {
     this.config = bot.config;
     this.memory = bot.memory;
 
+    //this.commands = [];
+    this.command_listeners = {};
+
     require('../plugins/' + plugin_name).call(this, this);
 };
 
@@ -64,13 +67,21 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     else if (ignorePublic) type = 'pm';
 
     if (!command) return;
-    var commands = [].concat(command).filter(function (cmd) {
-        return typeof cmd == 'string' && cmd;
-    });
+//    console.log("&&");
+//    console.log(command);
+//    api.commands = api.commands.concat(command);
+//    api.commands = [].concat(command).filter(function (cmd) {
+//        return typeof cmd == 'string' && cmd;
+//    });
 
-    this._bot.addListener(type, function (client, nick, target, text, msg) {
+//    console.log("**");
+//    console.log(api.commands);
+    
+    api.command_listeners[command] = function (client, nick, target, text, msg) {
         var match = api.matchCommand(text);
-        if (match && commands.indexOf(match[1]) > -1) {
+        if (!match[1]) return;
+        if (match && api.command_listeners[match[1]]) {
+            console.log('ping');
             callPlugin(api, callback, {
                 network: client.__network,
                 nick: nick,
@@ -81,7 +92,16 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
                 args: (match[2] || '').split(/\s+/)
             });
         }
-    });
+    };
+
+    this._bot.addListener(type, api.command_listeners[command]);
+};
+
+
+// Remove a command listener.
+API.prototype.removeCommand = function (command, plugin_name) {
+    var type = 'message';
+    this._bot.removeListener(type, this._bot.plugins[plugin_name].command_listeners[command]);
 };
 
 
