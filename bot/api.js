@@ -79,9 +79,8 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     
     api.command_listeners[command] = function (client, nick, target, text, msg) {
         var match = api.matchCommand(text);
-        if (!match[1]) return;
+        if (typeof match !== 'object') return;
         if (match && api.command_listeners[match[1]]) {
-            console.log('ping');
             callPlugin(api, callback, {
                 network: client.__network,
                 nick: nick,
