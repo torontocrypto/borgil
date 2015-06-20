@@ -34,12 +34,10 @@ Bot.prototype.unlinkPlugin = function (plugin_name) {
     if (this.plugins[plugin_name]) {
         // get list of commands in plugin
         // then remove their listeners
-        var i;
-        for (i = 0; i < this.plugins[plugin_name].commands.length; i++) {
-            var cmd = this.plugins[plugin_name].commands[i];
+        for (var cmd in this.plugins[plugin_name].command_listeners) {
             this.plugins[plugin_name].removeCommand(cmd, plugin_name);
         }
 
-        this.plugins[plugin_name] = null;
+        delete this.plugins[plugin_name];
     }
 };

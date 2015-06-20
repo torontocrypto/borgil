@@ -7,8 +7,7 @@ var API = module.exports = function (bot, plugin_name) {
 
     this.config = bot.config;
     this.memory = bot.memory;
-
-    //this.commands = [];
+;
     this.command_listeners = {};
 
     require('../plugins/' + plugin_name).call(this, this);
@@ -67,15 +66,6 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     else if (ignorePublic) type = 'pm';
 
     if (!command) return;
-//    console.log("&&");
-//    console.log(command);
-//    api.commands = api.commands.concat(command);
-//    api.commands = [].concat(command).filter(function (cmd) {
-//        return typeof cmd == 'string' && cmd;
-//    });
-
-//    console.log("**");
-//    console.log(api.commands);
     
     api.command_listeners[command] = function (client, nick, target, text, msg) {
         var match = api.matchCommand(text);
