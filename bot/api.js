@@ -7,6 +7,8 @@ var API = module.exports = function (bot, plugin_name) {
 
     this.config = bot.config;
     this.memory = bot.memory;
+;
+    this.command_listeners = {};
 
     require('../plugins/' + plugin_name).call(this, this);
 };
@@ -64,13 +66,11 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
     else if (ignorePublic) type = 'pm';
 
     if (!command) return;
-    var commands = [].concat(command).filter(function (cmd) {
-        return typeof cmd == 'string' && cmd;
-    });
-
-    this._bot.addListener(type, function (client, nick, target, text, msg) {
+    
+    api.command_listeners[command] = function (client, nick, target, text, msg) {
         var match = api.matchCommand(text);
-        if (match && commands.indexOf(match[1]) > -1) {
+        if (typeof match !== 'object') return;
+        if (match && api.command_listeners[match[1]]) {
             callPlugin(api, callback, {
                 network: client.__network,
                 nick: nick,
@@ -81,7 +81,16 @@ API.prototype.addCommand = function (command, callback, ignorePrivate, ignorePub
                 args: (match[2] || '').split(/\s+/)
             });
         }
-    });
+    };
+
+    this._bot.addListener(type, api.command_listeners[command]);
+};
+
+
+// Remove a command listener.
+API.prototype.removeCommand = function (command, plugin_name) {
+    var type = 'message';
+    this._bot.removeListener(type, this._bot.plugins[plugin_name].command_listeners[command]);
 };
 
 
@@ -91,6 +100,30 @@ API.prototype.say = function (network, target) {
 
     var text = util.format.apply(null, Array.prototype.slice.call(arguments, 2));
     this._bot.clients[network].say(target, text);
+};
+
+
+// Join a channel
+API.prototype.join = function (network, channel) {
+    if (!this._bot.clients[network]) return;
+
+    this._bot.clients[network].join(channel);
+};
+
+
+// Leave a channel
+API.prototype.part = function (network, channel) {
+     if (!this._bot.clients[network]) return;
+     
+     var msg = util.format.apply(null, Array.prototype.slice.call(arguments, 2));
+     this._bot.clients[network].part(channel, msg);
+};
+
+
+// Get whois info for a nickname
+API.prototype.whois = function (network, nick, callback) {
+    if (!this._bot.clients[network]) return;
+    this._bot.clients[network].whois(nick, function (info) { callback(info); });
 };
 
 
