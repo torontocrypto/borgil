@@ -13,4 +13,5 @@ borgil.use('sed');
 borgil.use('url');
 borgil.use('youtube');
 borgil.use('eightball');
+borgil.use('ircutil');
 
