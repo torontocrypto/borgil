@@ -9,8 +9,9 @@ module.exports = function (bot) {
     });
 
     bot.addCommand('remember', function (cmd) {
-        var nick = cmd.args[0],
-            word = cmd.args[1];
+        var args = cmd.args.split(/\s+/),
+            nick = args[0],
+            word = args[1];
 
         if (!nick) return bot.say(cmd.network, cmd.replyto, 'Usage: .remember <nick> [<word>]');
 
@@ -18,7 +19,7 @@ module.exports = function (bot) {
         var buffer = (bot.buffers[cmd.network] || {})[cmd.replyto] || [];
         if (!buffer.some(function (msg) {
             // exclude command messages
-            if (bot.matchCommand(msg.text)) return false;
+            if (msg.text.match(bot.getCommandRegex())) return false;
 
             if (msg.nick == nick && (!word || msg.text.match(new RegExp('\\b' + word + '\\b', 'i')))) {
                 db.insert({
@@ -37,8 +38,9 @@ module.exports = function (bot) {
     });
 
     bot.addCommand('quote', function (cmd) {
-        var nick = cmd.args[0],
-            word = cmd.args[1];
+        var args = cmd.args.split(/\s+/),
+            nick = args[0],
+            word = args[1];
 
         var filter = {
             network: cmd.network,

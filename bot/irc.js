@@ -8,30 +8,35 @@ module.exports = function () {
     for (var network in networks) {
         var networkcfg = networks[network];
 
-        // instantiate the client
+        // Instantiate the IRC client.
         var client = this.clients[network] = new irc.Client(networkcfg.host, networkcfg.nick, networkcfg.opts);
-        // prefix these with two underscores because they extend the third-party client object
-        // and we want to avoid possible future conflicts
+
+        // Prefix these with underscores to avoid possible future conflicts with the IRC lib.
         client.__network = network;
         client.__config = networkcfg;
 
-        // monkeypatch the emit function to pass all events to the Bot object as well
+        // Monkeypatch the emit function to pass all events to the Bot object as well.
         var selfEmit = client.emit,
-        bot = this;
+            bot = this;
+
         client.emit = function () {
-            var eventType = arguments[0];
+            var eventType = arguments[0],
+                eventArgs = Array.prototype.slice.call(arguments, 1);
 
             if (eventType == 'error') {
-                // emit errors at the bot level only
+                // Emit errors at the bot level only.
                 var msg = arguments[1];
                 bot.log.error('Error on client %s:', this.__network, msg.command.toUpperCase(), msg.args);
             }
             else {
-                // emit the event at the bot level
-                // passing the client as the first argument and original arguments afterward
-                bot.emit.apply(bot, [eventType, this].concat(Array.prototype.slice.call(arguments, 1)));
+                // Emit other events at the bot level and the plugin level,
+                // passing the client as the first argument and original arguments after it.
+                bot.emit.apply(bot, [eventType, this].concat(eventArgs));
+                for (name in bot.plugins) {
+                    bot.plugins[name].emit.apply(bot.plugins[name], [eventType, this].concat(eventArgs));
+                }
 
-                // emit the event at the client level as normal
+                // Emit the event at the client level as normal.
                 selfEmit.apply(this, arguments);
             }
         };

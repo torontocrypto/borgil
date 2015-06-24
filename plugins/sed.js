@@ -7,7 +7,7 @@ module.exports = function (bot) {
         '(?:\\/(\\S+))?'          // optional slash + flags
     );
 
-    bot.listen('message#', pattern, function (msg) {
+    bot.listen(pattern, function (msg) {
         var othernick = msg.match[1],
             search = msg.match[2],
             replace = msg.match[3],

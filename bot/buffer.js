@@ -1,26 +1,26 @@
 var default_buffer = 100;
 
 module.exports = function () {
-    // create buffer objects for each client
+    // Create buffer objects for each client.
     this.buffers = {};
     for (network in this.clients) {
         this.buffers[network] = {};
     }
 
-    // log each message to a buffer
-    this.addListener('message', function (client, nick, target, text, msg) {
+    // Log each message to a buffer.
+    this.on('message', function (client, nick, target, text, msg) {
         var source = target == client.nick ? nick : target;
 
-        // initialize buffer for this source if necessary
+        // Initialize buffer for this source if necessary.
         if (!(source in this.buffers[client.__network])) {
             this.buffers[client.__network][source] = [];
         }
         var buffer = this.buffers[client.__network][source];
 
+        // Trim buffer to maximum length, then add this message.
         if (buffer.length >= this.config.get('buffer', default_buffer)) {
             buffer.pop();
         }
-
         buffer.unshift({
             nick: nick,
             text: text,

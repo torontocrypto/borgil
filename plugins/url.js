@@ -9,7 +9,7 @@ var entities = new Entities();
 
 module.exports = function (bot) {
     // fetch title for URLs and echo it into the channel
-    bot.listen('message#', /https?:\/\/([^\/\s]+)\S*/i, function (msg) {
+    bot.listen(/https?:\/\/([^\/\s]+)\S*/i, function (msg) {
         // cancel if the message matches any patterns placed in url_exclusions by other plugins
         if ((bot.memory.url_exclusions || []).some(function (pattern) {
             return !!msg.text.match(pattern);

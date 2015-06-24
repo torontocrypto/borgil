@@ -175,12 +175,14 @@ module.exports = function (bot) {
     }
 
     bot.addCommand('rss', function (cmd) {
-        switch(cmd.args[0]) {
+        var args = cmd.args.split(/\s+/);
+
+        switch(args[0]) {
 
         case 'quick':
             fetch({
                 name: '',
-                url: cmd.args[1],
+                url: args[1],
                 network: cmd.network,
                 target: cmd.replyto,
             });
@@ -189,16 +191,17 @@ module.exports = function (bot) {
 
 
         case 'add':
-            var args = cmd.text.match(/^\S+\s+("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
+            // Feed names can contain spaces as long as they are wrapped in double quotes.
+            var addArgs = cmd.args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
 
-            if (!args) {
+            if (!addArgs) {
                 bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
                 break;
             }
 
-            var name = args[1],
-                url = args[2],
-                color = args[3] || '';
+            var name = addArgs[1],
+                url = addArgs[2],
+                color = addArgs[3] || '';
 
             if (name == 'all') {
                 bot.say(cmd.network, cmd.replyto, 'Invalid feed name.');
@@ -240,13 +243,13 @@ module.exports = function (bot) {
         case 'delete':
         case 'remove':
         case 'rm':
-            var args = cmd.text.match(/^\S+\s+("[^"]+"|[\w-]+)?/);
+            var delArgs = cmd.args.match(/^("[^"]+"|[\w-]+)?/);
 
-            if (args[1]) {
+            if (delArgs[1]) {
                 db.remove({
                     network: cmd.network,
                     target: cmd.replyto,
-                    name: args[1].replace(/^"|"$/g, ''),
+                    name: delArgs[1].replace(/^"|"$/g, ''),
                 }, function (err, count) {
                     if (count) bot.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
                 });
@@ -297,7 +300,7 @@ module.exports = function (bot) {
 
 
         case 'start':
-            var started = startFetching(parseInt(cmd.args[1]));
+            var started = startFetching(parseInt(args[1]));
             bot.say(cmd.network, cmd.replyto,
                 (started ? 'Starting to fetch feeds every %d minutes.' : 'Feeds are already being fetched every %d minutes.'),
                 interval);

@@ -47,10 +47,10 @@ module.exports = function () {
     // log listeners
 
     if (level == 'debug') {
-        this.addListener('raw', function (client, msg) {
+        this.on('raw', function (client, msg) {
             this.log.debug('%s: <-', client.__network, msg.rawCommand, msg.command.toUpperCase(), msg.nick || '', msg.args);
         });
-        this.addListener('selfMessage', function (client, target, text) {
+        this.on('selfMessage', function (client, target, text) {
             this.log.debug('%s: -> %s:', client.__network, target, text);
         });
     }

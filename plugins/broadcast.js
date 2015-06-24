@@ -8,7 +8,7 @@ module.exports = function (bot) {
         });
     }
 
-    bot.listen('message#', '.*', function (msg) {
+    bot.listen('.*', function (msg) {
         if (bot.config.get('plugins.broadcast.broadcast_all')) {
             // build a set of targets from all joined channels in all connected networks
             var targets = [];

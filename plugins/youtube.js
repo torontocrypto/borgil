@@ -54,7 +54,7 @@ module.exports = function (bot) {
         });
     }
 
-    bot.listen('message', url_pattern, function (msg) {
+    bot.listen(url_pattern, function (msg) {
         bot.log('Got YouTube URL:', msg.match[0]);
         getVideo(msg.match[1], function (data) {
             var render_template = handlebars.compile(bot.config.get('plugins.youtube.url_template', defaults.url_template));
