@@ -29,10 +29,17 @@ function setValue(obj, elems, value) {
     setValue(obj[elems[0]], elems.slice(1), value);
 }
 
-module.exports = function (configfile) {
-    configfile = configfile || 'config.json';
+module.exports = function (config_init) {
+    var config = {};
 
-    var config = JSON.parse(fs.readFileSync(configfile, {encoding: 'utf-8'}));
+    // If an object is passed, use it as the config.
+    if (typeof config_init == 'object') {
+        config = config_init;
+    }
+    // If a string is passed, treat it as a filename and read that file as JSON.
+    else if (typeof config_init == 'string') {
+        config = JSON.parse(fs.readFileSync(config_init, {encoding: 'utf-8'}));
+    }
 
     this.config = {
         get: function (path, defval) {

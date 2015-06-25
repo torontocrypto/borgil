@@ -5,12 +5,12 @@ var borgil = new Bot('config.json');
 
 //borgil.use('echo');
 //borgil.use('errortest');
+borgil.use('admin');
 borgil.use('broadcast');
 borgil.use('ddg-scraper');
+borgil.use('eightball');
 borgil.use('quote');
 borgil.use('rss');
 borgil.use('sed');
 borgil.use('url');
 borgil.use('youtube');
-borgil.use('eightball');
-

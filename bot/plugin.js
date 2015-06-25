@@ -15,13 +15,14 @@ var Plugin = module.exports = function (bot, name) {
     this.buffers = bot.buffers;
     this.memory = bot.memory;
 
+    bot.log.info('Activating plugin:', name);
     require('../plugins/' + name).call(this, this);
 };
 util.inherits(Plugin, EventEmitter);
 
 
 // Add a listener for a message matching a pattern, and call back with data about the message.
-function addMessageListener(pattern, callback, opts, parseMatch) {
+Plugin.prototype._addMessageListener = function(pattern, callback, opts, parseMatch) {
     var plugin = this;
 
     if (!opts) opts = {};
@@ -55,7 +56,7 @@ function addMessageListener(pattern, callback, opts, parseMatch) {
 
 // Start listening for a message matching a particular string or pattern.
 Plugin.prototype.listen = function (pattern, callback, opts) {
-    addMessageListener.call(this, pattern, callback, opts, function (match) {
+    this._addMessageListener(pattern, callback, opts, function (match) {
         return {
             match: match,
         };
@@ -64,7 +65,7 @@ Plugin.prototype.listen = function (pattern, callback, opts) {
 
 // Start listening for a command message matching a particular command.
 Plugin.prototype.addCommand = function (commands, callback, opts) {
-    addMessageListener.call(this, this.getCommandRegex(commands), callback, opts, function (match) {
+    this._addMessageListener(this.getCommandRegex(commands), callback, opts, function (match) {
         return {
             command: match[1],
             args: (match[2] || '').trim(),
@@ -103,6 +104,19 @@ Plugin.prototype.say = function (network, target) {
 };
 
 
+// Join a channel on one of the connected networks.
+Plugin.prototype.join = function (network, channel, callback) {
+    if (!this._bot.clients[network] || !channel) return;
+    this._bot.clients[network].join(util.isArray(channel) ? channel.join(' ') : channel, callback);
+}
+
+// Part from a connected channel.
+Plugin.prototype.part = function (network, channel, message, callback) {
+    if (!this._bot.clients[network] || !(channel in this._bot.clients[network].chans)) return;
+    this._bot.clients[network].part(channel, message, callback);
+}
+
+
 // Add a line to the log.
 Plugin.prototype.log = function () {
     this._bot.log.info('%s:', this.name, util.format.apply(null, arguments));
@@ -120,8 +134,8 @@ Object.defineProperty(Plugin.prototype, 'networks', {
         var networks = {};
         for (network in this._bot.clients) {
             networks[network] = {
-                channels: clients[network].chans,
-                nick: clients[network].nick
+                channels: this._bot.clients[network].chans,
+                nick: this._bot.clients[network].nick
             };
         }
         return networks;
