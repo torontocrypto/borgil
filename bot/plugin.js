@@ -48,7 +48,7 @@ Plugin.prototype._addMessageListener = function(pattern, callback, opts, parseMa
                 ));
             }
             catch (e) {
-                plugin._bot.log.error('Error in plugin %s:', plugin.name, e.message);
+                plugin.error(e.message);
             }
         }
     });

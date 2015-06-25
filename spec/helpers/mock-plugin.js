@@ -1,79 +1,73 @@
 var extend = require('extend');
+var util = require('util');
 
 var config = require('../../bot/config');
 var Plugin = require('../../bot/plugin');
 
 
+// A mock plugin object. Differences from the real plugin object:
+// - Properties set to simple defaults.
+// - Action methods stubbed out with Jasmine spies.
+// - _sendMessage method allows us to emit IRC message events directly.
 var MockPlugin = module.exports = function (name) {
     this._listeners = {};
 
-    // A default set of networks.
-    this.networks = {
-        network: {
-            nick: 'borgil',
-            channels: {
-                '#channel1': {},
-                '#channel2': {},
+    // Default properties.
+    this._bot = {
+        clients: {
+            network1: {
+                nick: 'borgil',
+                chans: {
+                    '#channel1': {},
+                    '#channel2': {},
+                }
             }
         }
     };
-
-    // A default config object.
     config.call(this, {
+        nick: 'borgil',
         admins: ['admin'],
     });
-
     this.buffers = {};
     this.memory = {};
 
-    // Plugin commands for tests to spy on.
-    this.say = jasmine.createSpy('say');
-    this.join = jasmine.createSpy('join');
-    this.part = jasmine.createSpy('part');
-    this.log = jasmine.createSpy('log');
-    this.error = jasmine.createSpy('error');
+    // Replace these commands with stubs.
+    spyOn(this, 'say');
+    spyOn(this, 'join');
+    spyOn(this, 'part');
+    spyOn(this, 'log');
+    spyOn(this, 'error');
 
     require('../../plugins/' + name).call(this, this);
 };
 
-MockPlugin.prototype._addMessageListener = function(pattern, callback, opts, parseMatch) {
-    var plugin = this;
+// Extend the real plugin prototype.
+util.inherits(MockPlugin, Plugin);
 
-    if (!callback.name) return;
-    if (!opts) opts = {};
 
-    var type = 'message';
-    if (opts.ignorePrivate && opts.ignorePublic) return;
-    else if (opts.ignorePrivate) type = 'message#';
-    else if (opts.ignorePublic) type = 'pm';
-
-    this._listeners[callback.name] = {
-        type: type,
-        pattern: pattern,
-        callback: callback,
-        parseMatch: parseMatch,
+MockPlugin.prototype._sendMessage = function (network, nick, target, text) {
+    var client = {
+        __network: network,
+        nick: this.config.get('nick'),
     };
-};
-
-MockPlugin.prototype.listen = Plugin.prototype.listen;
-MockPlugin.prototype.addCommand = Plugin.prototype.addCommand;
-MockPlugin.prototype.getCommandRegex = Plugin.prototype.getCommandRegex;
-
-MockPlugin.prototype._sendMessageTo = function (listenerName, msg) {
-    var listener = this._listeners[listenerName];
-
-    // A default message object for tests to send to plugin listeners.
-    var default_msg = {
-        network: 'network',
-        nick: 'nick',
-        target: '#channel1',
-        replyto: '#channel1',
-        text: 'text',
+    var raw = {
+        prefix: 'prefix',
+        nick: nick,
+        user: 'user',
+        host: 'host',
+        server: 'server',
+        rawCommand: 'PRIVMSG',
+        command: 'PRIVMSG',
+        commandType: 'normal',
+        args: [target, text],
     };
 
-    listener.callback.call(this, extend(
-        default_msg,
-        listener.parseMatch((msg.text || default_msg.text).match(listener.pattern)),
-        msg || {}
-    ));
+    // Emit the IRC message event, the same as the IRC module would.
+    this.emit('message', client, nick, target, text, raw);
+    if ('&#+!'.indexOf(target[0]) > -1) {
+        this.emit('message#', client, nick, target, text, raw);
+    }
+    if (target == this.config.get('nick')) {
+        this.emit('pm', client, nick, text, raw);
+    }
 };

@@ -3,7 +3,7 @@ module.exports = function (bot) {
     // that we send the command from. We should be able to join/part channels
     // on other connected networks as well.
 
-    bot.addCommand(['join'], function joinChannel(cmd) {
+    bot.addCommand(['join'], function (cmd) {
         if (bot.config.get('admins').indexOf(cmd.nick) == -1) return;
 
         var channel = cmd.args.match(/^[&#+!][^\s,:]+/);
@@ -18,7 +18,7 @@ module.exports = function (bot) {
         });
     });
 
-    bot.addCommand(['part'], function partChannel(cmd) {
+    bot.addCommand(['part'], function (cmd) {
         if (bot.config.get('admins').indexOf(cmd.nick) == -1) return;
 
         var args = cmd.args.match(/^([&#+!][^\s,:]+)(?:\s+(.*))?/);
