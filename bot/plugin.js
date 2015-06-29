@@ -32,16 +32,16 @@ Plugin.prototype._addMessageListener = function(pattern, callback, opts, parseMa
     else if (opts.ignorePrivate) type = 'message#';
     else if (opts.ignorePublic) type = 'pm';
 
-    this.on(type, function (client, nick, target, text, msg) {
+    this.on(type, function (network, nick, target, text, msg) {
         var match = text.match(pattern);
         if (match) {
             try {
                 callback.call(plugin, extend(
                     {
-                        network: client.__network,
+                        network: network,
                         nick: nick,
                         target: target,
-                        replyto: target == client.nick ? nick : target,
+                        replyto: target == this.networks[network].nick ? nick : target,
                         text: text,
                     },
                     parseMatch ? parseMatch(match) : {}
@@ -135,7 +135,8 @@ Object.defineProperty(Plugin.prototype, 'networks', {
         for (network in this._bot.clients) {
             networks[network] = {
                 channels: this._bot.clients[network].chans,
-                nick: this._bot.clients[network].nick
+                nick: this._bot.clients[network].nick,
+                config: this.config.get('networks.' + network),
             };
         }
         return networks;

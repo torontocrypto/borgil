@@ -11,10 +11,6 @@ module.exports = function () {
         // Instantiate the IRC client.
         var client = this.clients[network] = new irc.Client(networkcfg.host, networkcfg.nick, networkcfg.opts);
 
-        // Prefix these with underscores to avoid possible future conflicts with the IRC lib.
-        client.__network = network;
-        client.__config = networkcfg;
-
         // Monkeypatch the emit function to pass all events to the Bot object as well.
         var selfEmit = client.emit,
             bot = this;
@@ -26,14 +22,14 @@ module.exports = function () {
             if (eventType == 'error') {
                 // Emit errors at the bot level only.
                 var msg = arguments[1];
-                bot.log.error('Error on client %s:', this.__network, msg.command.toUpperCase(), msg.args);
+                bot.log.error('Error on client %s:', network, msg.command.toUpperCase(), msg.args);
             }
             else {
                 // Emit other events at the bot level and the plugin level,
-                // passing the client as the first argument and original arguments after it.
-                bot.emit.apply(bot, [eventType, this].concat(eventArgs));
+                // passing the network name as the first argument and original arguments after it.
+                bot.emit.apply(bot, [eventType, network].concat(eventArgs));
                 for (name in bot.plugins) {
-                    bot.plugins[name].emit.apply(bot.plugins[name], [eventType, this].concat(eventArgs));
+                    bot.plugins[name].emit.apply(bot.plugins[name], [eventType, network].concat(eventArgs));
                 }
 
                 // Emit the event at the client level as normal.

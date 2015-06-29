@@ -22,13 +22,6 @@
                 "selfSigned": true,
                 "userName": "borgil",
                 "realName": "Borgil of Menelvagor"
-            },
-            "nickserv_password": "password",
-            "nickserv_channels": [
-                "#torontocrypto"
-            ],
-            "nickserv_channel_keywords": {
-                "#torontocrypto": "keyword"
             }
         },
         "i2p": {
@@ -38,11 +31,7 @@
                 "port": 6668,
                 "userName": "borgil",
                 "realName": "Borgil of Menelvagor"
-            },
-            "nickserv_channels": [
-                "#torontocrypto"
-            ],
-            "nickserv_password": "password"
+            }
         }
     },
     "plugins": {
@@ -63,6 +52,25 @@
         },
         "ddg-scraper": {
             "template": "[DDG] {{{title}}} | {{url}}"
+        },
+        "nickserv": {
+            "networks": {
+                "oftc": {
+                    "password": "password",
+                    "channels": [
+                        "#torontocrypto"
+                    ],
+                    "channel_keywords": {
+                        "#torontocrypto": "keyword"
+                    }
+                },
+                "i2p": {
+                    "password": "password",
+                    "channels": [
+                        "#torontocrypto"
+                    ]
+                }
+            }
         },
         "rss": {
             "autostart": false,

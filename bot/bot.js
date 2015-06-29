@@ -18,7 +18,6 @@ var Bot = module.exports = function (configfile) {
     require('./logger').call(this);
     require('./irc').call(this);
     require('./buffer').call(this);
-    require('./nickserv').call(this);
 };
 // Extend the event emitter class.
 util.inherits(Bot, EventEmitter);

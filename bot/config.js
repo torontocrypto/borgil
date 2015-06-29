@@ -49,7 +49,12 @@ module.exports = function (config_init) {
 
         set: function (path, value) {
             setValue(config, Array.isArray(path) ? path : path.split('.'), value);
-            fs.writeFile(configfile, JSON.stringify(config, null, 4), {encoding: 'utf-8'});
+        },
+
+        save: function () {
+            if (typeof config_init == 'string') {
+                fs.writeFile(config_init, JSON.stringify(config, null, 4), {encoding: 'utf-8'});
+            }
         }
     };
 };
