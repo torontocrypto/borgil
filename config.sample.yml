@@ -1,0 +1,64 @@
+commandchar: .
+buffer: 100
+log:
+    dir: logs
+    filename: borgil--{{date}}.log
+    date_format: YYYY-MM-DD--HH-mm-ss
+    console: true
+    debug: false
+dbdir: db
+admins:
+    - saltire
+networks:
+    oftc:
+        host: irc.oftc.net
+        nick: borgil
+        opts:
+            port: 6697
+            secure: true
+            selfSigned: true
+            userName: borgil
+            realName: Borgil of Menelvagor
+    i2p:
+        host: localhost
+        nick: borgil
+        opts:
+            port: 6668
+            userName: borgil
+            realName: Borgil of Menelvagor
+plugins:
+    broadcast:
+        broadcast_all: false
+        target_sets:
+            -
+                -
+                    network: oftc
+                    channel: '#torontocrypto'
+                -
+                    network: i2p
+                    channel: '#torontocrypto'
+    ddg-scraper:
+        template: '[DDG] {{{title}}} | {{url}}'
+    nickserv:
+        networks:
+            oftc:
+                password: password
+                channels:
+                    - '#torontocrypto'
+                channel_keywords:
+                    '#torontocrypto': keyword
+            i2p:
+                password: password
+                channels:
+                    - '#torontocrypto'
+    rss:
+        autostart: false
+        interval: 10
+        item_template: '[{{color}}{{name}}{{reset}}] {{{title}}} | {{url}}'
+        list_template: ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}'
+    url:
+        template: '[ {{{title}}} ] - {{domain}}'
+    youtube:
+        api_key:
+        url_template: '[YouTube] {{{title}}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}'
+        search_template: '[YouTube] {{{title}}} | {{url}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}'

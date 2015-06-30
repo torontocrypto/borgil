@@ -1,4 +1,5 @@
 var fs = require('fs');
+var yaml = require('js-yaml');
 
 
 function getValue(obj, elems) {
@@ -36,9 +37,16 @@ module.exports = function (config_init) {
     if (typeof config_init == 'object') {
         config = config_init;
     }
-    // If a string is passed, treat it as a filename and read that file as JSON.
+    // If a string is passed, treat it as a filename and read that file as YAML or JSON.
     else if (typeof config_init == 'string') {
-        config = JSON.parse(fs.readFileSync(config_init, {encoding: 'utf-8'}));
+        var configfile = fs.readFileSync(config_init, 'utf-8');
+
+        try {
+            if (config_init.match(/\.ya?ml$/i)) config = yaml.safeLoad(configfile);
+            else config = JSON.parse(configfile);
+        } catch (e) {
+            console.log('Error reading config file at ' + config_init + ':', e.message);
+        }
     }
 
     this.config = {

@@ -1,7 +1,7 @@
 var Bot = require('./bot/bot');
 
 
-var borgil = new Bot('config.json');
+var borgil = new Bot('config.yml');
 
 // borgil.use('echo');
 // borgil.use('errortest');
