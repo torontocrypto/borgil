@@ -45,7 +45,7 @@ module.exports = function (config_init) {
             if (config_init.match(/\.ya?ml$/i)) config = yaml.safeLoad(configfile);
             else config = JSON.parse(configfile);
         } catch (e) {
-            console.log('Error reading config file at ' + config_init + ':', e.message);
+            console.error('Error reading config file at ' + config_init + ':', e.message);
         }
     }
 

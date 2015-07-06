@@ -28,7 +28,8 @@ module.exports = function (bot) {
             id: id,
         }, function (err, result) {
             if (err) return bot.error('Error fetching video details:', err.message);
-            if (!result.items || !result.items.length) return;
+            if (!result.items || !result.items.length) return bot.error('No data in YouTube request for video', id);
+            bot.log('Fetched YouTube info for video', id);
             var video = result.items[0];
 
             // format length
@@ -58,30 +59,33 @@ module.exports = function (bot) {
         bot.log('Got YouTube URL:', msg.match[0]);
         getVideo(msg.match[1], function (data) {
             var render_template = handlebars.compile(bot.config.get('plugins.youtube.url_template', defaults.url_template));
-            bot.log('Echoing YouTube info for', data.url);
             bot.say(msg.network, msg.replyto, render_template(data));
         });
     });
 
     bot.addCommand(['youtube', 'yt'], function (cmd) {
         var apiKey = bot.config.get('plugins.youtube.api_key');
-        if (!apiKey || !cmd.text) return;
+        if (!apiKey || !cmd.args) return;
 
-        bot.log('Got YouTube search:', cmd.text);
+        bot.log('Got YouTube search:', cmd.args);
 
         youtube.search.list({
             auth: apiKey,
             part: 'id',
-            q: cmd.text,
+            q: cmd.args,
             type: 'video',
             maxResults: 1,
         }, function (err, result) {
             if (err) return bot.error('Error searching videos:', err.message);
-            if (!result.items || !result.items.length) return;
+            if (!Array.isArray(result.items)) return bot.error('No items in YouTube results.');
+
+            bot.log('Found %d result(s) for:', result.items.length, cmd.args);
+            if (!result.items.length) {
+                return bot.say(cmd.network, cmd.replyto, 'No video results found for %s.', cmd.args);
+            }
 
             getVideo(result.items[0].id.videoId, function (data) {
                 var render_template = handlebars.compile(bot.config.get('plugins.youtube.search_template', defaults.search_template));
-                bot.log('Echoing YouTube info for', data.url);
                 bot.say(cmd.network, cmd.replyto, render_template(data));
             });
         });
