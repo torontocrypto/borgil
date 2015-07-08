@@ -32,6 +32,7 @@ Plugin.prototype._addMessageListener = function (pattern, callback, opts, parseM
     else if (opts.ignorePrivate) type = 'message#';
     else if (opts.ignorePublic) type = 'pm';
 
+    // FIXME: this won't work for private messages, as they don't include a nick argument
     this.on(type, function (network, nick, target, text, msg) {
         var match = text.match(pattern);
         if (match) {
@@ -103,18 +104,26 @@ Plugin.prototype.say = function (network, target) {
     this._bot.clients[network].say(target, text);
 };
 
-
 // Join a channel on one of the connected networks.
 Plugin.prototype.join = function (network, channel, callback) {
     if (!this._bot.clients[network] || !channel) return;
     this._bot.clients[network].join(util.isArray(channel) ? channel.join(' ') : channel, callback);
-}
+};
 
 // Part from a connected channel.
 Plugin.prototype.part = function (network, channel, message, callback) {
     if (!this._bot.clients[network] || !(channel in this._bot.clients[network].chans)) return;
     this._bot.clients[network].part(channel, message, callback);
-}
+};
+
+// Send a raw command with any number of arguments.
+Plugin.prototype.sendRaw = function (network, type) {
+    if (!this._bot.clients[network]) return;
+
+    var cmdArgs = Array.prototype.slice.call(arguments, 2);
+    this._bot.log.debug('%s: ->', type, cmdArgs);
+    this._bot.clients[network].send.apply(this._bot.clients[network], [type].concat(cmdArgs));
+};
 
 
 // Add a line to the log.

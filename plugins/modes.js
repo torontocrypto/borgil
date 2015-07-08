@@ -4,7 +4,7 @@ module.exports = function () {
         if (typeof modes == 'string') modes = [modes];
         modes.forEach(function (mode) {
             this.log('Setting mode on %s:', network, mode);
-            this._bot.clients[network].send('MODE', this.networks[network].nick, mode);
+            this.sendRaw(network, 'MODE', this.networks[network].nick, mode);
         }, this);
     });
 };

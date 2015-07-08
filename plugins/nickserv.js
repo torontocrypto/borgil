@@ -18,8 +18,14 @@ function checkForIdentifySuccess(network, nick, target, text, msg) {
 
     if ((waitingForNickServ[network]) &&
             nick == 'NickServ' &&
-            target == this.networks[network].config.nick &&
             text.match(nickserv_opts.success)) {
+
+        // Change our nick if it is currently not correct.
+        if (target != this.networks[network].config.nick) {
+            this.log('Nick is currently %s, requesting change to %s.',
+                target, this.networks[network].config.nick);
+            this.sendRaw(network, 'NICK', this.networks[network].config.nick);
+        }
 
         // Join all NickServ-only channels on this network.
         if (Array.isArray(nickserv_opts.channels) && nickserv_opts.channels.length) {
