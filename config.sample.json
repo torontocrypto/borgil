@@ -62,6 +62,7 @@
             "networks": {
                 "oftc": {
                     "password": "password",
+                    "success": "You are successfully identified",
                     "channels": [
                         "#torontocrypto"
                     ],
@@ -70,7 +71,9 @@
                     }
                 },
                 "i2p": {
+                    "nick_first": true,
                     "password": "password",
+                    "success": "You are now identified",
                     "channels": [
                         "#torontocrypto"
                     ]
