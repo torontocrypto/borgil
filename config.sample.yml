@@ -39,6 +39,9 @@ plugins:
                     channel: '#torontocrypto'
     ddg-scraper:
         template: '[DDG] {{{title}}} | {{url}}'
+    modes:
+        i2p:
+            - '+B'
     nickserv:
         networks:
             oftc:

@@ -22,7 +22,7 @@ util.inherits(Plugin, EventEmitter);
 
 
 // Add a listener for a message matching a pattern, and call back with data about the message.
-Plugin.prototype._addMessageListener = function(pattern, callback, opts, parseMatch) {
+Plugin.prototype._addMessageListener = function (pattern, callback, opts, parseMatch) {
     var plugin = this;
 
     if (!opts) opts = {};
