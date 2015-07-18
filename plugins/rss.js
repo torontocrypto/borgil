@@ -136,7 +136,7 @@ module.exports = function (bot) {
     }
 
     function findFeeds(cmd, callback) {
-        var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
+        var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/g);
 
         // fetch feeds from all channels (admin only)
         var all = args[1] == 'all' && bot.config.get('admins', []).indexOf(cmd.nick) > -1;
@@ -192,8 +192,9 @@ module.exports = function (bot) {
 
         case 'add':
             // Feed names can contain spaces as long as they are wrapped in double quotes.
-            var addArgs = cmd.args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
-
+            //var addArgs = cmd.args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
+            var addArgs = cmd.args.match(/(https?:\/\/\S+\.\S+)|(\w+)/g);
+  
             if (!addArgs) {
                 bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
                 break;
