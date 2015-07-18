@@ -192,7 +192,7 @@ module.exports = function (bot) {
 
         case 'add':
             // Feed names can contain spaces as long as they are wrapped in double quotes.
-            var addArgs = cmd.args.match(/(https?:\/\/\S+\.\S+)|(".+")|(\w+)/g);
+            var addArgs = cmd.args.match(/(https?:\/\/\S+\.\S+)|"(.+)"|(\w+)/g);
   
             if (!addArgs) {
                 bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
