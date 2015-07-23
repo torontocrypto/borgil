@@ -20,18 +20,20 @@ module.exports = function (bot) {
         bot.log('Got URL:', url);
 
         request.get(url, function (err, res, body) {
-            if (!err && res.statusCode == 200) {
-                var t = body.match(/<title>\s*(.*?)\s*<\/title>/i);
-                if (!t || !t[1].length) return;
+            if (!err) {
+                if (res.statusCode == 200 && res.headers['content-type'] == 'text/html') {
+                    var t = body.match(/<title>\s*(.*?)\s*<\/title>/i);
+                    if (!t || !t[1].length) return;
 
-                var data = {
-                    domain: domain,
-                    title: entities.decode(t[1]),
-                    url: url,
-                };
-                var render_template = handlebars.compile(bot.config.get('plugins.url.template', default_template));
-                bot.log('Echoing URL title:', data.title);
-                bot.say(msg.network, msg.replyto, render_template(data));
+                    var data = {
+                        domain: domain,
+                        title: entities.decode(t[1]),
+                        url: url,
+                    };
+                    var render_template = handlebars.compile(bot.config.get('plugins.url.template', default_template));
+                    bot.log('Echoing URL title:', data.title);
+                    bot.say(msg.network, msg.replyto, render_template(data));
+                }
             }
         });
     });
