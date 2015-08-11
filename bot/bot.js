@@ -1,4 +1,4 @@
-var EventEmitter = require('events').EventEmitter;
+var EventEmitter = require('eventemitter2').EventEmitter2;
 var util = require('util');
 
 var Plugin = require('./plugin');
@@ -16,8 +16,21 @@ var Bot = module.exports = function (configfile) {
     // Include extra functionality.
     require('./config').call(this, configfile);
     require('./logger').call(this);
-    require('./irc').call(this);
     require('./buffer').call(this);
+
+    var tptypes = {
+        IRC: require('./transports/irc'),
+        Telegram: require('./transports/telegram'),
+    };
+    var tpconfigs = this.config.get('transports', {});
+
+    this.transports = {};
+    for (tpname in tpconfigs) {
+        var tpconfig = tpconfigs[tpname];
+        if (tpconfig.type in tptypes) {
+            this.transports[tpname] = new tptypes[tpconfig.type](this, tpname, tpconfig);
+        }
+    }
 };
 // Extend the event emitter class.
 util.inherits(Bot, EventEmitter);

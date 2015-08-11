@@ -3,16 +3,16 @@ var Bot = require('./bot/bot');
 
 var borgil = new Bot('config.yml');
 
-// borgil.use('echo');
+borgil.use('echo');
 // borgil.use('errortest');
-borgil.use('admin');
-borgil.use('broadcast');
-borgil.use('ddg-scraper');
-borgil.use('eightball');
-borgil.use('modes');
-borgil.use('nickserv');
-borgil.use('quote');
-borgil.use('rss');
-borgil.use('sed');
-borgil.use('url');
-borgil.use('youtube');
+// borgil.use('admin');
+// borgil.use('broadcast');
+// borgil.use('ddg-scraper');
+// borgil.use('eightball');
+// borgil.use('modes');
+// borgil.use('nickserv');
+// borgil.use('quote');
+// borgil.use('rss');
+// borgil.use('sed');
+// borgil.use('url');
+// borgil.use('youtube');
