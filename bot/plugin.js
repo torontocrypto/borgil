@@ -121,7 +121,7 @@ Plugin.prototype.sendRaw = function (network, type) {
     if (!this._bot.clients[network]) return;
 
     var cmdArgs = Array.prototype.slice.call(arguments, 2);
-    this._bot.log.debug('%s: ->', type, cmdArgs);
+    this._bot.log.debug('%s: ->', network, type, cmdArgs);
     this._bot.clients[network].send.apply(this._bot.clients[network], [type].concat(cmdArgs));
 };
 

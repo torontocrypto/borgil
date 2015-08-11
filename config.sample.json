@@ -37,6 +37,7 @@
     "plugins": {
         "broadcast": {
             "broadcast_all": false,
+            "template": "[{{source}}] <{{nick}}> {{text}}",
             "target_sets": [
                 [
                     {

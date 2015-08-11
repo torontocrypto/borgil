@@ -1,13 +1,25 @@
+var extend = require('extend');
+var handlebars = require('handlebars');
+
+
+var default_template = '[{{source}}] <{{nick}}> {{text}}';
+
 module.exports = function () {
     function broadcastToTargets(msg, targets) {
+        var render_template = handlebars.compile(this.config.get('plugins.broadcast.template', default_template));
+
         targets.forEach(function (target) {
             // Don't send to the same target the message came from.
             if (target.network == msg.network && target.channel == msg.replyto) return;
-            // Don't send to channels we aren't currently in.
+            // Don't send to networks/channels we aren't currently in.
+            if (!(target.network in this.networks)) return;
             if (!(target.channel in this.networks[target.network].channels)) return;
 
-            var identifier = (target.network != msg.network ? (msg.network + ':') : '') + msg.replyto;
-            this.say(target.network, target.channel, '<%s> [%s]', identifier, msg.nick, msg.text);
+            var data = extend({
+                source: (target.network != msg.network ? (msg.network + ':') : '') + msg.replyto,
+            }, msg);
+
+            this.say(target.network, target.channel, render_template(data));
         }, this);
     }
 
