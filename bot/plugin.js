@@ -21,8 +21,8 @@ var Plugin = module.exports = function (bot, name) {
 util.inherits(Plugin, EventEmitter);
 
 
-// Add a listener for a message matching a pattern, and call back with data about the message.
-Plugin.prototype._addMessageListener = function (pattern, callback, opts, parseMatch) {
+// Start listening for a message matching a pattern, and call back with data about the message.
+Plugin.prototype.listen = function (pattern, callback, opts) {
     var plugin = this;
 
     if (!opts) opts = {};
@@ -37,40 +37,47 @@ Plugin.prototype._addMessageListener = function (pattern, callback, opts, parseM
         var match = text.match(pattern);
         if (match) {
             try {
-                callback.call(plugin, extend(
-                    {
-                        network: network,
-                        nick: nick,
-                        target: target,
-                        replyto: target == this.networks[network].nick ? nick : target,
-                        text: text,
-                    },
-                    parseMatch ? parseMatch(match) : {}
-                ));
+                callback.call(plugin, {
+                    network: network,
+                    nick: nick,
+                    target: target,
+                    replyto: target == this.networks[network].nick ? nick : target,
+                    text: text,
+                    match: match,
+                });
             }
             catch (e) {
                 plugin.error(e.message);
             }
         }
     });
-}
-
-// Start listening for a message matching a particular string or pattern.
-Plugin.prototype.listen = function (pattern, callback, opts) {
-    this._addMessageListener(pattern, callback, opts, function (match) {
-        return {
-            match: match,
-        };
-    });
 };
 
-// Start listening for a command message matching a particular command.
+// Start listening for a command message matching a particular set of commands.
 Plugin.prototype.addCommand = function (commands, callback, opts) {
-    this._addMessageListener(this.getCommandRegex(commands), callback, opts, function (match) {
-        return {
-            command: match[1],
-            args: (match[2] || '').trim(),
-        };
+    var plugin = this;
+
+    if (typeof commands === 'string') {
+        commands = commands.split(',');
+    }
+
+    this.on('command#', function (network, nick, target, text, command, args, msg) {
+        if (commands.indexOf(command) > -1) {
+            try {
+                callback.call(plugin, {
+                    network: network,
+                    nick: nick,
+                    target: target,
+                    replyto: target == this.networks[network].nick ? nick : target,
+                    text: text,
+                    command: command,
+                    args: args,
+                });
+            }
+            catch (e) {
+                plugin.error(e.message);
+            }
+        }
     });
 };
 
