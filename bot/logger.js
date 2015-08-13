@@ -42,16 +42,4 @@ module.exports = function () {
     this.log = new winston.Logger({
         transports: transports
     });
-
-
-    // log listeners
-
-    if (level == 'debug') {
-        this.on('raw', function (network, msg) {
-            this.log.debug('%s: <-', network, msg.rawCommand, msg.command.toUpperCase(), msg.nick || '', msg.args);
-        });
-        this.on('selfMessage', function (network, target, text) {
-            this.log.debug('%s: -> %s:', network, target, text);
-        });
-    }
 };

@@ -32,27 +32,65 @@ var Telegram = module.exports = function (bot, name, config) {
 
     this.offset = 0;
     this.telegram = new TelegramAPI(config.token);
-    this.getUpdates();
+    this._getUpdates();
 };
 util.inherits(Telegram, Transport);
 
-Telegram.prototype.getUpdates = function () {
-    var tp = this;
+Telegram.prototype._getUpdates = function () {
+    var transport = this;
+
+    var debug = this.bot.config.get('log.debug');
+
+    if (debug) {
+        this.bot.log.debug('%s: Polling for Telegram updates...', this.name);
+    }
 
     // Make a long polling call to the API.
     this.telegram.send('getUpdates', {
         offset: this.offset,
         timeout: 20
     }, function (err, result) {
-        if (err) return console.error(err);
+        if (err) {
+            transport.emit('error', err.message);
+        }
+        else {
+            // Emit events for any messages received.
+            (result || []).forEach(function (update) {
+                transport.offset = Math.max(transport.offset, update.update_id + 1);
 
-        // Emit events for any messages received.
-        (result || []).forEach(function (update) {
-            tp.offset = Math.max(tp.offset, update.update_id + 1);
-            tp.emit('message', update.message);
-        });
+                var data = {
+                    from: update.message.from.id,
+                    to: update.message.chat.id,
+                    replyto: update.message.chat.id,
+                    text: update.message.text,
+                    time: new Date(update.message.date * 1000),
+                };
+
+                transport.emit('message', data);
+
+                // Test if this message is a command, and if so emit a command event.
+                var m = update.message.text.match(/^\/(\S+)(?:\s+(.*?))?\s*$/);
+                if (m) {
+                    data.command = m[1];
+                    data.args = (m[2] || '').trim();
+                    transport.emit('command', data);
+                }
+
+                if (debug) {
+                    transport.bot.log.debug('%s: Got update:', transport.name, update);
+                }
+            });
+        }
 
         // Continue polling.
-        tp.getUpdates();
+        transport._getUpdates();
+    });
+};
+
+Telegram.prototype.say = function (target) {
+    var text = util.format.apply(null, Array.prototype.slice.call(arguments, 1));
+    this.telegram.send('sendMessage', {
+        chat_id: target,
+        text: text,
     });
 };
