@@ -1,18 +1,19 @@
-var MockPlugin = require('../helpers/mock-plugin');
+var MockBot = require('../helpers/mock-bot');
 var MockTransport = require('../helpers/mock-transport');
 
 
 describe('Echo plugin', function () {
-    var mockPlugin;
+    var mockBot;
     var mockTransport;
 
     beforeEach(function () {
-        mockPlugin = new MockPlugin('echo');
+        mockBot = new MockBot();
+        mockBot.use('echo');
         mockTransport = new MockTransport();
     });
 
     it('should repeat any message on the same channel', function () {
-        mockPlugin.bot.emit('message', mockTransport, {
+        mockBot.emit('message', mockTransport, {
             from: 'somebody',
             to: '#channel1',
             replyto: '#channel1',
@@ -22,7 +23,7 @@ describe('Echo plugin', function () {
     });
 
     it('should repeat any private message', function () {
-        mockPlugin.bot.emit('message', mockTransport, {
+        mockBot.emit('message', mockTransport, {
             from: 'somebody',
             to: 'borgil',
             replyto: 'somebody',

@@ -13,6 +13,6 @@ borgil.use('admin');
 // borgil.use('nickserv');
 // borgil.use('quote');
 // borgil.use('rss');
-// borgil.use('sed');
-// borgil.use('url');
+borgil.use('sed');
+borgil.use('url');
 // borgil.use('youtube');

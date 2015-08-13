@@ -1,15 +1,16 @@
-var MockPlugin = require('../helpers/mock-plugin');
+var MockBot = require('../helpers/mock-bot');
 var MockTransport = require('../helpers/mock-transport');
 
 
 describe('Admin plugin', function () {
-    var mockPlugin;
+    var mockBot;
     var mockTransport;
 
     beforeEach(function () {
-        mockPlugin = new MockPlugin('admin', {
+        mockBot = new MockBot({
             admins: ['admin'],
         });
+        mockBot.use('admin');
         mockTransport = new MockTransport();
         mockTransport.channels = [
             '#channel1',
@@ -17,7 +18,7 @@ describe('Admin plugin', function () {
     });
 
     it('should join a new channel', function () {
-        mockPlugin.bot.emit('command', mockTransport, {
+        mockBot.emit('command', mockTransport, {
             from: 'admin',
             command: 'join',
             args: '#newchannel',
@@ -26,7 +27,7 @@ describe('Admin plugin', function () {
     });
 
     it('should refuse to join channels the bot is already in', function () {
-        mockPlugin.bot.emit('command', mockTransport, {
+        mockBot.emit('command', mockTransport, {
             from: 'admin',
             replyto: '#channel1',
             command: 'join',
@@ -37,7 +38,7 @@ describe('Admin plugin', function () {
     });
 
     it('should refuse to join channels if the caller is not an admin', function () {
-        mockPlugin.bot.emit('command', mockTransport, {
+        mockBot.emit('command', mockTransport, {
             from: 'notadmin',
             command: 'join',
             args: '#newchannel',
@@ -46,7 +47,7 @@ describe('Admin plugin', function () {
     });
 
     it('should part the channel', function () {
-        mockPlugin.bot.emit('command', mockTransport, {
+        mockBot.emit('command', mockTransport, {
             from: 'admin',
             command: 'part',
             args: '#channel1',
@@ -55,7 +56,7 @@ describe('Admin plugin', function () {
     });
 
     it('should part the channel with a message', function () {
-        mockPlugin.bot.emit('command', mockTransport, {
+        mockBot.emit('command', mockTransport, {
             from: 'admin',
             command: 'part',
             args: '#channel1 Later, dudes!',
@@ -64,7 +65,7 @@ describe('Admin plugin', function () {
     });
 
     it('should refuse to part channels the bot is not in', function () {
-        mockPlugin.bot.emit('command', mockTransport, {
+        mockBot.emit('command', mockTransport, {
             from: 'admin',
             replyto: '#channel1',
             command: 'part',
@@ -75,7 +76,7 @@ describe('Admin plugin', function () {
     });
 
     it('should refuse to part channels if the caller is not an admin', function () {
-        mockPlugin.bot.emit('command', mockTransport, {
+        mockBot.emit('command', mockTransport, {
             from: 'notadmin',
             command: 'part',
             args: '#channel1',

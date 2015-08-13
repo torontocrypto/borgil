@@ -1,7 +1,7 @@
-var MockConfig = module.exports = function (paths) {
-    this.paths = paths;
+var MockConfig = module.exports = function (config) {
+    this.config = config || {};
 };
 
-MockConfig.prototype.get = function (path) {
-    return this.paths[path];
+MockConfig.prototype.get = function (path, defval) {
+    return this.config[path] !== undefined ? this.config[path] : defval;
 };

@@ -1,4 +1,3 @@
-var EventEmitter = require('events').EventEmitter;
 var extend = require('extend');
 var util = require('util');
 
@@ -6,8 +5,6 @@ var util = require('util');
 // A set of commands and properties for a single plugin to access.
 // Instantiating one of these objects per client helps with logging and error handling.
 var Plugin = module.exports = function (bot, name) {
-    EventEmitter.call(this);
-
     this.bot = bot;
     this.name = name;
 
@@ -18,7 +15,6 @@ var Plugin = module.exports = function (bot, name) {
     bot.log.info('Activating plugin:', name);
     require('../plugins/' + name).call(this, this);
 };
-util.inherits(Plugin, EventEmitter);
 
 
 // Start listening for a message matching a pattern, and call back with data about the message.
