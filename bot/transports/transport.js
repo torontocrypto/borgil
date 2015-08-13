@@ -8,6 +8,8 @@ var Transport = module.exports = function (bot, name) {
     this.bot = bot;
     this.name = name;
 
+    this.channels = [];
+
     this.onAny(function () {
         var args = Array.prototype.slice.call(arguments);
 

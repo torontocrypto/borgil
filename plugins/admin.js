@@ -1,35 +1,34 @@
-module.exports = function (bot) {
+module.exports = function () {
     // TODO: Currently we can only join or part channels on the same network
     // that we send the command from. We should be able to join/part channels
-    // on other connected networks as well.
+    // on other connected networks as well. Example: .join oftc/#torontocrypto
 
-    bot.addCommand(['join'], function (cmd) {
-        if (bot.config.get('admins').indexOf(cmd.nick) == -1) return;
+    this.addCommand(['join'], function (cmd) {
+        if (this.config.get('admins').indexOf(cmd.from) == -1) return;
 
-        var channel = cmd.args.match(/^[&#+!][^\s,:]+/);
-        if (!channel) {
-            return bot.say(cmd.network, cmd.replyto, "That isn't a valid channel.");
+        var channel = cmd.args.split(/\s+/)[0];
+        if (cmd.transport.channels.indexOf(channel) > -1) {
+            return cmd.transport.say(cmd.replyto, "I'm already in that channel.");
         }
-        if (channel[0] in bot.networks[cmd.network].channels) {
-            return bot.say(cmd.network, cmd.replyto, "I'm already in that channel.");
-        }
-        bot.join(cmd.network, channel[0], function () {
-            bot.say(cmd.network, cmd.replyto, 'Joined.');
+        cmd.transport.join(channel, function () {
+            cmd.transport.say(cmd.replyto, 'Joined %s.', channel);
         });
     });
 
-    bot.addCommand(['part'], function (cmd) {
-        if (bot.config.get('admins').indexOf(cmd.nick) == -1) return;
+    this.addCommand(['part', 'leave'], function (cmd) {
+        if (this.config.get('admins').indexOf(cmd.from) == -1) return;
 
-        var args = cmd.args.match(/^([&#+!][^\s,:]+)(?:\s+(.*))?/);
-        if (!args) {
-            return bot.say(cmd.network, cmd.replyto, "That isn't a valid channel.");
+        var args = cmd.args.match(/^(\S+)(?:\s+(.*))?/);
+        if (!args) return;
+
+        var channel = args[1];
+        var message = args[2] || null;
+
+        if (cmd.transport.channels.indexOf(channel) == -1) {
+            return cmd.transport.say(cmd.replyto, "I'm not in that channel.");
         }
-        if (!(args[1] in bot.networks[cmd.network].channels)) {
-            return bot.say(cmd.network, cmd.replyto, "I'm not in that channel.");
-        }
-        else bot.part(cmd.network, args[1], args[2] || null, function () {
-            bot.say(cmd.network, cmd.replyto, 'Parted.');
+        cmd.transport.leave(channel, message, function () {
+            cmd.transport.say(cmd.replyto, 'Left %s.', channel);
         });
     });
 
