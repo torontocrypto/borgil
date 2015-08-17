@@ -30,7 +30,7 @@ describe('IRC transport', function () {
         transport.on('command', commandHandler);
     });
 
-    it('should create message events', function () {
+    it('should emit message events', function () {
         transport.irc.emit('message', 'nick', '#channel', 'blah blah', {});
 
         expect(messageHandler).toHaveBeenCalledWith(jasmine.objectContaining({
@@ -42,16 +42,19 @@ describe('IRC transport', function () {
         expect(commandHandler).not.toHaveBeenCalled();
     });
 
-    it('should emit command events', function () {
+    it('should emit commands as message and command events', function () {
         transport.irc.emit('message', 'nick', '#channel', '%command arg1 arg2');
 
-        expect(commandHandler).toHaveBeenCalledWith(jasmine.objectContaining({
+        var expectedData = jasmine.objectContaining({
             from: 'nick',
             to: '#channel',
             replyto: '#channel',
             text: '%command arg1 arg2',
             command: 'command',
             args: 'arg1 arg2',
-        }));
+        });
+
+        expect(messageHandler).toHaveBeenCalledWith(expectedData);
+        expect(commandHandler).toHaveBeenCalledWith(expectedData);
     });
 });

@@ -1,0 +1,74 @@
+{
+ "kind": "youtube#videoListResponse",
+ "etag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+ "pageInfo": {
+  "totalResults": 1,
+  "resultsPerPage": 1
+ },
+ "items": [
+  {
+   "kind": "youtube#video",
+   "etag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+   "id": "123456789",
+   "snippet": {
+    "publishedAt": "2013-10-07T00:24:42.000Z",
+    "channelId": "bbbbbbbbbbbbbbbbbbbbbbbb",
+    "title": "Video Title",
+    "description": "Video description.",
+    "thumbnails": {
+     "default": {
+      "url": "https://i.ytimg.com/vi/123456789/default.jpg",
+      "width": 120,
+      "height": 90
+     },
+     "medium": {
+      "url": "https://i.ytimg.com/vi/123456789/mqdefault.jpg",
+      "width": 320,
+      "height": 180
+     },
+     "high": {
+      "url": "https://i.ytimg.com/vi/123456789/hqdefault.jpg",
+      "width": 480,
+      "height": 360
+     },
+     "standard": {
+      "url": "https://i.ytimg.com/vi/123456789/sddefault.jpg",
+      "width": 640,
+      "height": 480
+     },
+     "maxres": {
+      "url": "https://i.ytimg.com/vi/123456789/maxresdefault.jpg",
+      "width": 1280,
+      "height": 720
+     }
+    },
+    "channelTitle": "AYouTubeChannel",
+    "tags": [
+     "tag1",
+     "tag2",
+     "tag3"
+    ],
+    "categoryId": "23",
+    "liveBroadcastContent": "none",
+    "localized": {
+     "title": "Video Title",
+     "description": "Video description."
+    }
+   },
+   "contentDetails": {
+    "duration": "PT3M33S",
+    "dimension": "2d",
+    "definition": "hd",
+    "caption": "false",
+    "licensedContent": false
+   },
+   "statistics": {
+    "viewCount": "1016",
+    "likeCount": "7",
+    "dislikeCount": "1",
+    "favoriteCount": "0",
+    "commentCount": "1"
+   }
+  }
+ ]
+}

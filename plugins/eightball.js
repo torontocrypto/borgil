@@ -1,17 +1,18 @@
 var fs = require('fs');
 
-module.exports = function (bot) {
-    var resps = [];
-
-    var filename = bot.config.get('plugins.eightball.response_file', './plugins/data/eightball.txt');
+module.exports = function () {
+    var filename = this.config.get('plugins.eightball.response_file', './plugins/data/eightball.txt');
+    var plugin = this;
 
     fs.readFile(filename, {encoding: 'UTF-8'}, function (err, data) {
-        if (err) return bot.error("Couldn't find 8-ball response file.");
-        resps = data.trim().split('\n');
-    });
+        if (err) return plugin.error("Couldn't find 8-ball response file.");
 
-    bot.addCommand(['8', '8ball', 'eightball'], function (cmd) {
-        if (!resps.length) return;
-        bot.say(cmd.network, cmd.replyto, resps[Math.floor(Math.random() * resps.length)]);
+        var data = (data || '').trim();
+        if (!data) return plugin.error('No 8-ball responses found.');
+
+        var resps = data.split('\n');
+        plugin.addCommand(['8', '8ball', 'eightball'], function (cmd) {
+            cmd.transport.say(cmd.replyto, resps[Math.floor(Math.random() * resps.length)]);
+        });
     });
 };

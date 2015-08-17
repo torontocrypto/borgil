@@ -46,9 +46,7 @@ var IRC = module.exports = function (bot, name, config) {
             time: new Date(),
         };
 
-        transport.emit('message', data);
-
-        // Test if this message is a command, and if so emit a command event.
+        // If this message is a command, add command properties and emit a command event.
         var commandchar = bot.config.get('commandchar', '.')
             .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
         var commandRegex = new RegExp('^' + commandchar + '(\\S+)(?:\\s+(.*?))?\\s*$');
@@ -58,6 +56,8 @@ var IRC = module.exports = function (bot, name, config) {
             data.args = (m[2] || '').trim();
             transport.emit('command', data);
         }
+
+        transport.emit('message', data);
     });
 };
 util.inherits(IRC, Transport);

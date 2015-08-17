@@ -1,7 +1,7 @@
+var buffer = require('../../bot/buffer.js');
+
 var MockBot = require('../helpers/mock-bot');
 var MockTransport = require('../helpers/mock-transport');
-
-var buffer = require('../../bot/buffer.js');
 
 
 describe('Search and replace plugin', function () {

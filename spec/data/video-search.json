@@ -1,0 +1,19 @@
+{
+ "kind": "youtube#searchListResponse",
+ "etag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+ "nextPageToken": "CAEQAA",
+ "pageInfo": {
+  "totalResults": 445583,
+  "resultsPerPage": 1
+ },
+ "items": [
+  {
+   "kind": "youtube#searchResult",
+   "etag": "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+   "id": {
+    "kind": "youtube#video",
+    "videoId": "123456789"
+   }
+  }
+ ]
+}

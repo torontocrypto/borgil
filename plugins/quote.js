@@ -2,42 +2,44 @@ var DataStore = require('nedb');
 var path = require('path');
 
 
-module.exports = function (bot) {
+module.exports = function () {
     var db = new DataStore({
-        filename: path.join(bot.config.get('dbdir', ''), 'quote.db'),
+        filename: path.join(this.config.get('dbdir', ''), 'quote.db'),
         autoload: true,
     });
 
-    bot.addCommand('remember', function (cmd) {
+    var plugin = this;
+
+    this.addCommand('remember', function (cmd) {
         var args = cmd.args.split(/\s+/),
             nick = args[0],
             word = args[1];
 
-        if (!nick) return bot.say(cmd.network, cmd.replyto, 'Usage: .remember <nick> [<word>]');
+        if (!nick) return cmd.transport.say(cmd.replyto, 'Usage: .remember <nick> [<word>]');
 
-        // search channel buffer
-        var buffer = (bot.buffers[cmd.network] || {})[cmd.replyto] || [];
+        // Search the channel buffer for matching messages.
+        var buffer = (this.buffers[cmd.transport.name] || {})[cmd.replyto] || [];
         if (!buffer.some(function (msg) {
-            // exclude command messages
-            if (msg.text.match(bot.getCommandRegex())) return false;
+            // Exclude command messages.
+            if (msg.command) return false;
 
-            if (msg.nick == nick && (!word || msg.text.match(new RegExp('\\b' + word + '\\b', 'i')))) {
+            if (msg.from == nick && (!word || msg.text.match(new RegExp('\\b' + word + '\\b', 'i')))) {
                 db.insert({
-                    network: cmd.network,
+                    network: cmd.transport.name,
                     channel: cmd.replyto,
                     msg: msg,
                 }, function (err, quote) {
-                    if (quote) bot.say(cmd.network, cmd.replyto, 'Remembered %s saying:', quote.msg.nick, quote.msg.text);
+                    if (quote) cmd.transport.say(cmd.replyto, 'Remembered %s saying:', quote.msg.from, quote.msg.text);
                 });
                 return true;
             }
         })) {
-            if (word) bot.say(cmd.network, cmd.replyto, 'Sorry, I can\'t remember what %s said about "%s" recently.', nick, word);
-            else bot.say(cmd.network, cmd.replyto, 'Sorry, I can\'t remember anything %s said recently.', nick);
+            if (word) cmd.transport.say(cmd.replyto, 'Sorry, I can\'t remember what %s said about "%s" recently.', nick, word);
+            else cmd.transport.say(cmd.replyto, 'Sorry, I can\'t remember anything %s said recently.', nick);
         }
     });
 
-    bot.addCommand('quote', function (cmd) {
+    this.addCommand('quote', function (cmd) {
         var args = cmd.args.split(/\s+/),
             nick = args[0],
             word = args[1];
@@ -49,21 +51,21 @@ module.exports = function (bot) {
         if (nick) filter['msg.nick'] = nick;
 
         db.find(filter, function (err, quotes) {
-            if (err) return bot.error('Error fetching quote:', err.message);
+            if (err) return plugin.error('Error fetching quote:', err.message);
 
             if (word) quotes = quotes.filter(function (quote) {
                 return quote.msg.text.match(new RegExp('\\b' + word + '\\b', 'i'));
             });
 
             if (!quotes.length) {
-                if (word) bot.say(cmd.network, cmd.replyto, 'Sorry, I don\'t have any quotes from %s about "%s".', nick, word);
-                else if (nick) bot.say(cmd.network, cmd.replyto, 'Sorry, I don\'t have any quotes from %s.', nick);
-                else bot.say(cmd.network, cmd.replyto, 'Sorry, I don\'t have any quotes. To save a quote, use ".remember".');
+                if (word) cmd.transport.say(cmd.replyto, 'Sorry, I don\'t have any quotes from %s about "%s".', nick, word);
+                else if (nick) cmd.transport.say(cmd.replyto, 'Sorry, I don\'t have any quotes from %s.', nick);
+                else cmd.transport.say(cmd.replyto, 'Sorry, I don\'t have any quotes. To save a quote, use ".remember".');
                 return;
             }
 
             var quote = quotes[Math.floor(Math.random() * quotes.length)];
-            bot.say(cmd.network, cmd.replyto, '<%s>', quote.msg.nick, quote.msg.text);
+            cmd.transport.say(cmd.replyto, '<%s>', quote.msg.nick, quote.msg.text);
         });
     });
 };

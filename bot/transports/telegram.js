@@ -66,15 +66,15 @@ Telegram.prototype._getUpdates = function () {
                     time: new Date(update.message.date * 1000),
                 };
 
-                transport.emit('message', data);
-
-                // Test if this message is a command, and if so emit a command event.
+                // If this message is a command, add command properties and emit a command event.
                 var m = update.message.text.match(/^\/(\S+)(?:\s+(.*?))?\s*$/);
                 if (m) {
                     data.command = m[1];
                     data.args = (m[2] || '').trim();
                     transport.emit('command', data);
                 }
+
+                transport.emit('message', data);
 
                 if (debug) {
                     transport.bot.log.debug('%s: Got update:', transport.name, update);
