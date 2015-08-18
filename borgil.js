@@ -6,7 +6,7 @@ var borgil = new Bot('config.yml');
 borgil.use('echo');
 borgil.use('errortest');
 borgil.use('admin');
-// borgil.use('broadcast');
+borgil.use('broadcast');
 borgil.use('ddg-scraper');
 borgil.use('eightball');
 // borgil.use('modes');

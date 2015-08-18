@@ -2,7 +2,7 @@ var extend = require('extend');
 var handlebars = require('handlebars');
 
 
-var default_template = '[{{{source}}}] <{{{nick}}}> {{{text}}}';
+var default_template = '[{{{source}}}] <{{{from}}}> {{{text}}}';
 
 module.exports = function () {
     function broadcastToTargets(msg, targets) {
@@ -10,16 +10,17 @@ module.exports = function () {
 
         targets.forEach(function (target) {
             // Don't send to the same target the message came from.
-            if (target.network == msg.network && target.channel == msg.replyto) return;
+            if (target.transport == msg.transport.name && target.channel == msg.replyto) return;
             // Don't send to networks/channels we aren't currently in.
-            if (!(target.network in this.networks)) return;
-            if (!(target.channel in this.networks[target.network].channels)) return;
+            if (!(target.transport in this.transports)) return;
+            if (this.transports[target.transport].channels.indexOf(target.channel) === -1) return;
 
+            // 'source' is the channel name, with transport prepended if it's not the current one.
             var data = extend({
-                source: (target.network != msg.network ? (msg.network + ':') : '') + msg.replyto,
+                source: (target.transport != msg.transport.name ? (msg.transport.name + ':') : '') + msg.replyto,
             }, msg);
 
-            this.say(target.network, target.channel, render_template(data));
+            this.transports[target.transport].say(target.channel, render_template(data));
         }, this);
     }
 
@@ -27,13 +28,13 @@ module.exports = function () {
         if (this.config.get('plugins.broadcast.broadcast_all')) {
             // Build a set of targets from all joined channels in all connected networks.
             var targets = [];
-            for (var network in this.networks) {
-                for (var channel in this.networks[network].channels) {
+            for (var tpname in this.transports) {
+                this.transports[tpname].channels.forEach(function (channel) {
                     targets.push({
-                        network: network,
+                        transport: tpname,
                         channel: channel,
                     });
-                }
+                });
             }
             broadcastToTargets.call(this, msg, targets);
         }
@@ -42,7 +43,7 @@ module.exports = function () {
             this.config.get('plugins.broadcast.target_sets', []).forEach(function (targets) {
                 // Check that the received message's target is in this set.
                 if (targets.some(function (target) {
-                    return target.network == msg.network && target.channel == msg.replyto;
+                    return target.transport == msg.transport.name && target.channel == msg.replyto;
                 })) {
                     broadcastToTargets.call(this, msg, targets);
                 }

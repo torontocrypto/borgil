@@ -11,6 +11,7 @@ var Plugin = module.exports = function (bot, name) {
     this.config = bot.config;
     this.buffers = bot.buffers;
     this.memory = bot.memory;
+    this.transports = bot.transports;
 
     bot.log.info('Activating plugin:', name);
     require('../plugins/' + name).call(this, this);
