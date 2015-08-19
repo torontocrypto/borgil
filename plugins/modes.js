@@ -1,10 +1,14 @@
 module.exports = function () {
-    this.on('registered', function (network, msg) {
-        var modes = this.config.get('plugins.modes.' + network, []);
-        if (typeof modes == 'string') modes = [modes];
-        modes.forEach(function (mode) {
-            this.log('Setting mode on %s:', network, mode);
-            this.sendRaw(network, 'MODE', this.networks[network].nick, mode);
-        }, this);
-    });
+    var plugin = this;
+    var modes = this.config.get('plugins.modes', {});
+    for (tpname in modes) {
+        var transport = this.transports[tpname];
+        if (transport && transport.sendRaw) {
+            // Wait for the IRC registered event, and send a raw MODE command.
+            transport.on('registered', function () {
+                plugin.log('Setting mode on %s:', tpname, modes[tpname]);
+                transport.sendRaw('MODE', modes[tpname]);
+            });
+        }
+    }
 };
