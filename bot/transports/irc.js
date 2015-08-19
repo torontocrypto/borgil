@@ -66,7 +66,3 @@ IRC.prototype.say = function (target) {
     var text = util.format.apply(null, Array.prototype.slice.call(arguments, 1));
     this.irc.say(target, text);
 };
-
-IRC.prototype.sendRaw = function () {
-    this.irc.send.apply(this.irc, arguments);
-};

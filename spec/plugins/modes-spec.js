@@ -14,7 +14,9 @@ describe('IRC modes plugin', function () {
         });
 
         mockIRC = new MockTransport();
-        mockIRC.sendRaw = jasmine.createSpy();
+        mockIRC.irc = {
+            send: jasmine.createSpy(),
+        };
         mockBot.transports = {
             irc: mockIRC,
         };
@@ -24,6 +26,6 @@ describe('IRC modes plugin', function () {
 
     it('should send a MODE command to an IRC transport once registered', function () {
         mockIRC.emit('registered');
-        expect(mockIRC.sendRaw).toHaveBeenCalledWith('MODE', '+B');
+        expect(mockIRC.irc.send).toHaveBeenCalledWith('MODE', '+B');
     });
 });
