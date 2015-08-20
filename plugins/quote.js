@@ -1,21 +1,37 @@
 var DataStore = require('nedb');
+var extend = require('extend');
+var handlebars = require('handlebars');
 var path = require('path');
 
 
+var default_templates = {
+    remember: 'Remembered {{from}} saying "{{text}}".',
+    cantRememberWord: 'Sorry, I can\'t remember what {{from}} said about "{{word}}" recently.',
+    cantRememberFrom: 'Sorry, I can\'t remember anything {{from}} said recently.',
+    cantRemember: 'Sorry, I can\'t remember anyone saying anything recently.',
+    quote: '<{{from}}> {{text}}',
+    cantQuoteWord: 'Sorry, I don\'t have any quotes from {{from}} about "{{word}}".',
+    cantQuoteFrom: 'Sorry, I don\'t have any quotes from {{from}}.',
+    cantQuote: 'Sorry, I don\'t have any quotes. To save a quote, use ".remember".',
+};
+
+
 module.exports = function () {
-    var db = new DataStore({
+    this.memory.quotedb = new DataStore({
         filename: path.join(this.config.get('dbdir', ''), 'quote.db'),
-        autoload: true,
+        autoload: true
     });
 
     var plugin = this;
+    var render_template;
 
     this.addCommand('remember', function (cmd) {
         var args = cmd.args.split(/\s+/),
             nick = args[0],
             word = args[1];
 
-        if (!nick) return cmd.transport.say(cmd.replyto, 'Usage: .remember <nick> [<word>]');
+        var templates = extend({}, default_templates,
+            this.config.get('plugins.quote.templates', {}));
 
         // Search the channel buffer for matching messages.
         var buffer = (this.buffers[cmd.transport.name] || {})[cmd.replyto] || [];
@@ -23,19 +39,35 @@ module.exports = function () {
             // Exclude command messages.
             if (msg.command) return false;
 
-            if (msg.from == nick && (!word || msg.text.match(new RegExp('\\b' + word + '\\b', 'i')))) {
-                db.insert({
-                    network: cmd.transport.name,
-                    channel: cmd.replyto,
-                    msg: msg,
-                }, function (err, quote) {
-                    if (quote) cmd.transport.say(cmd.replyto, 'Remembered %s saying:', quote.msg.from, quote.msg.text);
+            if ((!nick || msg.from == nick) &&
+                    (!word || msg.text.match(new RegExp('\\b' + word + '\\b', 'i')))) {
+                // Add the transport name.
+                msg.transport = cmd.transport.name;
+
+                // Store the message in the quote database.
+                plugin.memory.quotedb.insert(msg, function (err, quote) {
+                    if (err) {
+                        return plugin.log('Error saving quote on %s/%s:', msg.transport, msg.replyto, msg.text);
+                    }
+                    render_template = handlebars.compile(templates.remember);
+                    cmd.transport.say(cmd.replyto, render_template(quote));
                 });
                 return true;
             }
         })) {
-            if (word) cmd.transport.say(cmd.replyto, 'Sorry, I can\'t remember what %s said about "%s" recently.', nick, word);
-            else cmd.transport.say(cmd.replyto, 'Sorry, I can\'t remember anything %s said recently.', nick);
+            if (word) {
+                render_template = handlebars.compile(templates.cantRememberWord);
+            }
+            else if (nick) {
+                render_template = handlebars.compile(templates.cantRememberFrom);
+            }
+            else {
+                render_template = handlebars.compile(templates.cantRemember);
+            }
+            cmd.transport.say(cmd.replyto, render_template({
+                from: nick || '',
+                word: word || '',
+            }));
         }
     });
 
@@ -45,27 +77,42 @@ module.exports = function () {
             word = args[1];
 
         var filter = {
-            network: cmd.network,
-            channel: cmd.replyto,
+            transport: cmd.transport.name,
+            replyto: cmd.replyto,
         };
-        if (nick) filter['msg.nick'] = nick;
+        if (nick) filter.from = nick;
 
-        db.find(filter, function (err, quotes) {
+        this.memory.quotedb.find(filter, function (err, quotes) {
             if (err) return plugin.error('Error fetching quote:', err.message);
 
+            var templates = extend({}, default_templates,
+                plugin.config.get('plugins.quote.templates', {}));
+            var render_template;
+
             if (word) quotes = quotes.filter(function (quote) {
-                return quote.msg.text.match(new RegExp('\\b' + word + '\\b', 'i'));
+                return quote.text.match(new RegExp('\\b' + word + '\\b', 'i'));
             });
 
             if (!quotes.length) {
-                if (word) cmd.transport.say(cmd.replyto, 'Sorry, I don\'t have any quotes from %s about "%s".', nick, word);
-                else if (nick) cmd.transport.say(cmd.replyto, 'Sorry, I don\'t have any quotes from %s.', nick);
-                else cmd.transport.say(cmd.replyto, 'Sorry, I don\'t have any quotes. To save a quote, use ".remember".');
+                if (word) {
+                    render_template = handlebars.compile(templates.cantQuoteWord);
+                }
+                else if (nick) {
+                    render_template = handlebars.compile(templates.cantQuoteFrom);
+                }
+                else {
+                    render_template = handlebars.compile(templates.cantQuote);
+                }
+                cmd.transport.say(cmd.replyto, render_template({
+                    from: nick || '',
+                    word: word || '',
+                }));
                 return;
             }
 
             var quote = quotes[Math.floor(Math.random() * quotes.length)];
-            cmd.transport.say(cmd.replyto, '<%s>', quote.msg.nick, quote.msg.text);
+            render_template = handlebars.compile(templates.quote);
+            cmd.transport.say(cmd.replyto, render_template(quote));
         });
     });
 };
