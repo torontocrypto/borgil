@@ -2,7 +2,7 @@ var extend = require('extend');
 var handlebars = require('handlebars');
 
 
-var default_template = '[{{source}}] <{{nick}}> {{text}}';
+var default_template = '[{{{source}}}] <{{{nick}}}> {{{text}}}';
 
 module.exports = function () {
     function broadcastToTargets(msg, targets) {
