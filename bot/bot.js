@@ -1,6 +1,7 @@
 var EventEmitter = require('eventemitter2').EventEmitter2;
 var util = require('util');
 
+var Config = require('./config');
 var Plugin = require('./plugin');
 
 
@@ -9,12 +10,13 @@ var Bot = module.exports = function (configfile) {
     // Run the event emitter constructor.
     EventEmitter.call(this);
 
+    this.config = new Config(configfile);
+
     this.clients = {};
     this.plugins = {};
     this.memory = {};
 
     // Include extra functionality.
-    require('./config').call(this, configfile);
     require('./logger').call(this);
     require('./transports').call(this);
     require('./buffer').call(this);

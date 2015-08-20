@@ -9,9 +9,7 @@ describe('URL plugin', function () {
     var mockTransport;
 
     beforeEach(function () {
-        mockBot = new MockBot({
-            'plugins.url.template': '[ {{{title}}} ] - {{domain}}',
-        });
+        mockBot = new MockBot();
         mockBot.use('url');
         mockTransport = new MockTransport();
     });

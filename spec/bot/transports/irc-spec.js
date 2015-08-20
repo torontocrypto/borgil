@@ -1,8 +1,7 @@
-var EventEmitter = require('eventemitter2').EventEmitter2;
 var irc = require('irc');
 
-var MockConfig = require('../helpers/mock-config');
-var IRC = require('../../bot/transports/irc');
+var IRC = require('../../../bot/transports/irc');
+var MockBot = require('../../helpers/mock-bot');
 
 
 describe('IRC transport', function () {
@@ -12,8 +11,7 @@ describe('IRC transport', function () {
     var commandHandler;
 
     beforeEach(function () {
-        bot = new EventEmitter();
-        bot.config = new MockConfig({
+        bot = new MockBot({
             'debug.log': false,
             'commandchar': '%',
         });

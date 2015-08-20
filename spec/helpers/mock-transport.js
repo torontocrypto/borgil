@@ -2,10 +2,10 @@ var EventEmitter = require('eventemitter2').EventEmitter2;
 var util = require('util');
 
 
-var MockTransport = module.exports = function () {
+var MockTransport = module.exports = function (name) {
     EventEmitter.call(this);
 
-    this.name = 'mockTransport';
+    this.name = name || 'mockTransport';
     this.channels = [];
 
     this.say = jasmine.createSpy();

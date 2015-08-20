@@ -8,9 +8,7 @@ describe('IRC modes plugin', function () {
 
     beforeEach(function () {
         mockBot = new MockBot({
-            'plugins.modes': {
-                irc: '+B',
-            },
+            'plugins.modes.irc': '+B',
         });
 
         mockIRC = new MockTransport();

@@ -10,7 +10,7 @@ borgil.use('broadcast');
 borgil.use('ddg-scraper');
 borgil.use('eightball');
 borgil.use('modes');
-// borgil.use('nickserv');
+borgil.use('nickserv');
 // borgil.use('quote');
 // borgil.use('rss');
 borgil.use('sed');
