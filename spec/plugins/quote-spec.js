@@ -13,7 +13,6 @@ describe('Quote plugin', function () {
     var mockTransport;
 
     beforeEach(function (done) {
-        // Create a blank database file.
         mkdirp.sync(path.join(__dirname, '../temp'));
 
         mockBot = new MockBot({

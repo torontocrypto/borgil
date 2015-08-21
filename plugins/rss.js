@@ -19,54 +19,56 @@ var intervalObj;
 
 var entities = new Entities();
 
-module.exports = function (bot) {
-    var db = new DataStore({
-        filename: path.join(bot.config.get('dbdir', ''), 'rss.db'),
+module.exports = function () {
+    var db = this.memory.rssdb = new DataStore({
+        filename: path.join(this.config.get('dbdir', ''), 'rss.db'),
         autoload: true,
     });
 
+    var plugin = this;
+
     // fetch a feed and reply with the latest entry
     function fetch(feed, ignoreCache) {
-        bot.log('[%s] Fetching feed at', feed.name, feed.url);
+        plugin.log('[%s] Fetching feed at', feed.name, feed.url);
 
         // build cache validation headers
         var headers = {};
         if (!ignoreCache && feed.name) {
             if (feed.etag) {
-                bot.log('[%s] Sending saved etag:', feed.name, feed.etag);
+                plugin.log('[%s] Sending saved etag:', feed.name, feed.etag);
                 headers['If-None-Match'] = feed.etag;
             }
             if (feed.last_modified) {
-                bot.log('[%s] Sending saved last-modified date:', feed.name, feed.last_modified);
+                plugin.log('[%s] Sending saved last-modified date:', feed.name, feed.last_modified);
                 headers['If-Modified-Since'] = feed.last_modified;
             }
         }
 
         var parser = new FeedParser({});
-        var render_item_template = handlebars.compile(bot.config.get('plugins.rss.item_template', defaults.item_template));
+        var render_item_template = handlebars.compile(plugin.config.get('plugins.rss.item_template', defaults.item_template));
 
         request.get({
             url: feed.url,
             headers: headers
         })
         .on('error', function (e) {
-            bot.error('RSS request error:', e.message);
+            plugin.error('RSS request error:', e.message);
         })
         .on('response', function (res) {
-            bot.log('[%s] Received %d response', feed.name, res.statusCode);
+            plugin.log('[%s] Received %d response', feed.name, res.statusCode);
 
             if (res.statusCode == 304) return;
-            if (res.statusCode != 200) return bot.error('Bad status code %d from RSS feed', res.statusCode, feed.name);
+            if (res.statusCode != 200) return plugin.error('Bad status code %d from RSS feed', res.statusCode, feed.name);
 
             if (feed.name) {
                 // save cache validation headers
                 var update = null;
                 if (res.headers.etag) {
-                    bot.log('[%s] Got etag:', feed.name, res.headers.etag);
+                    plugin.log('[%s] Got etag:', feed.name, res.headers.etag);
                     update = extend(update || {}, {etag: res.headers.etag});
                 }
                 if (res.headers['last-modified']) {
-                    bot.log('[%s] Got last-modified date:', feed.name, res.headers['last-modified']);
+                    plugin.log('[%s] Got last-modified date:', feed.name, res.headers['last-modified']);
                     update = extend(update || {}, {last_modified: res.headers['last-modified']});
                 }
                 if (update !== null) {
@@ -77,7 +79,7 @@ module.exports = function (bot) {
                     }, {
                         $set: update,
                     }, {}, function (err, count) {
-                        if (count) bot.log('[%s] Updated cache headers.', feed.name);
+                        if (count) plugin.log('[%s] Updated cache headers.', feed.name);
                     });
                 }
             }
@@ -87,7 +89,7 @@ module.exports = function (bot) {
 
         parser
         .on('error', function (e) {
-            bot.error('RSS parser error:', e.message);
+            plugin.error('RSS parser error:', e.message);
         })
         .once('readable', function () {
             item = this.read();
@@ -103,7 +105,7 @@ module.exports = function (bot) {
                 if (!ignoreCache && feed.latest && Object.keys(latest).every(function (key) {
                     return latest[key] == feed.latest[key];
                 })) {
-                    bot.log('[%s] Latest item is the same as last fetch; skipping.', feed.name);
+                    plugin.log('[%s] Latest item is the same as last fetch; skipping.', feed.name);
                     return;
                 }
 
@@ -117,7 +119,7 @@ module.exports = function (bot) {
                         latest: latest,
                     }
                 }, {}, function (err, count) {
-                    if (count) bot.log('[%s] Saved latest item.', feed.name)
+                    if (count) plugin.log('[%s] Saved latest item.', feed.name)
                 });
             }
 
@@ -130,8 +132,8 @@ module.exports = function (bot) {
             },
             irc.colors.codes);
 
-            bot.log('[%s] Displaying link:', feed.name, item.link);
-            bot.say(feed.network, feed.target, render_item_template(data));
+            plugin.log('[%s] Displaying link:', feed.name, item.link);
+            plugin.say(feed.network, feed.target, render_item_template(data));
         });
     }
 
@@ -139,7 +141,7 @@ module.exports = function (bot) {
         var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
 
         // fetch feeds from all channels (admin only)
-        var all = args[1] == 'all' && bot.config.get('admins', []).indexOf(cmd.nick) > -1;
+        var all = args[1] == 'all' && plugin.config.get('admins', []).indexOf(cmd.nick) > -1;
 
         var filter = {
             network: cmd.network,
@@ -157,11 +159,11 @@ module.exports = function (bot) {
             intervalObj = null;
         }
 
-        interval = newInterval || parseInt(bot.config.get('plugins.rss.interval')) || interval || defaults.interval;
+        interval = newInterval || parseInt(plugin.config.get('plugins.rss.interval')) || interval || defaults.interval;
 
         if (!intervalObj) {
             intervalObj = setInterval(function () {
-                bot.log('Fetching RSS feeds...');
+                plugin.log('Fetching RSS feeds...');
                 db.find({}, function (err, feeds) {
                     feeds.forEach(function (feed) {
                         fetch(feed);
@@ -169,12 +171,12 @@ module.exports = function (bot) {
                 });
             }, interval * 60000);
 
-            bot.log('Starting to fetch feeds every %d minutes.', interval);
+            plugin.log('Starting to fetch feeds every %d minutes.', interval);
             return true;
         }
     }
 
-    bot.addCommand('rss', function (cmd) {
+    this.addCommand('rss', function (cmd) {
         var args = cmd.args.split(/\s+/);
 
         switch(args[0]) {
@@ -192,10 +194,10 @@ module.exports = function (bot) {
 
         case 'add':
             // Feed names can contain spaces as long as they are wrapped in double quotes.
-            var addArgs = cmd.args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
+            var addArgs = cmd.args.match(/^add\s+("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
 
             if (!addArgs) {
-                bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
+                cmd.transport.say(cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
                 break;
             }
 
@@ -204,34 +206,37 @@ module.exports = function (bot) {
                 color = addArgs[3] || '';
 
             if (name == 'all') {
-                bot.say(cmd.network, cmd.replyto, 'Invalid feed name.');
+                cmd.transport.say(cmd.replyto, 'Invalid feed name.');
                 break;
             }
             name = name.replace(/^"|"$/g, '');
 
             db.find({
-                network: cmd.network,
+                transport: cmd.transport.name,
                 target: cmd.replyto,
                 $or: [
                     {name: name},
                     {url: url},
                 ],
             }, function (err, feeds) {
+                if (err) return plugin.error('Error checking for feed:', err.message);
+
                 // check against existing feeds for this target
                 if (feeds.length) {
-                    bot.say(cmd.network, cmd.replyto,
+                    cmd.transport.say(cmd.replyto,
                         'A feed already exists with that %s.', feeds[0].name == name ? 'name' : 'URL');
                 }
                 else {
                     // add the feed to the list for this target
                     db.insert({
+                        transport: cmd.transport.name,
+                        target: cmd.replyto,
                         name: name,
                         url: url,
-                        network: cmd.network,
-                        target: cmd.replyto,
                         color: irc.colors.codes[color] || '',
                     }, function (err, feed) {
-                        if (feed) bot.say(cmd.network, cmd.replyto, 'Added 1 feed.');
+                        if (err) return plugin.error('Error saving feed:', err.message);
+                        if (feed) cmd.transport.say(cmd.replyto, 'Added 1 feed.');
                     });
                 }
             });
@@ -251,7 +256,7 @@ module.exports = function (bot) {
                     target: cmd.replyto,
                     name: delArgs[1].replace(/^"|"$/g, ''),
                 }, function (err, count) {
-                    if (count) bot.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
+                    if (count) plugin.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
                 });
             }
 
@@ -260,9 +265,9 @@ module.exports = function (bot) {
 
         case 'list':
             findFeeds(cmd, function (err, feeds) {
-                bot.say(cmd.network, cmd.replyto, 'Found %d feed%s.', feeds.length, feeds.length == 1 ? '' : 's');
+                plugin.say(cmd.network, cmd.replyto, 'Found %d feed%s.', feeds.length, feeds.length == 1 ? '' : 's');
 
-                var render_list_template = handlebars.compile(bot.config.get('plugins.rss.list_template', defaults.list_template));
+                var render_list_template = handlebars.compile(plugin.config.get('plugins.rss.list_template', defaults.list_template));
 
                 feeds.forEach(function (feed) {
                     // add colors to feed info for use as template data
@@ -270,7 +275,7 @@ module.exports = function (bot) {
                         feed[color] = irc.colors.codes[color];
                     }
 
-                    bot.say(cmd.network, cmd.replyto, render_list_template(feed));
+                    plugin.say(cmd.network, cmd.replyto, render_list_template(feed));
                 });
             });
 
@@ -301,7 +306,7 @@ module.exports = function (bot) {
 
         case 'start':
             var started = startFetching(parseInt(args[1]));
-            bot.say(cmd.network, cmd.replyto,
+            plugin.say(cmd.network, cmd.replyto,
                 (started ? 'Starting to fetch feeds every %d minutes.' : 'Feeds are already being fetched every %d minutes.'),
                 interval);
 
@@ -310,7 +315,7 @@ module.exports = function (bot) {
 
         case 'stop':
             if (intervalObj) {
-                bot.say(cmd.network, cmd.replyto, 'Stopped fetching feeds.');
+                plugin.say(cmd.network, cmd.replyto, 'Stopped fetching feeds.');
                 clearInterval(intervalObj);
                 intervalObj = null;
             }
@@ -320,7 +325,7 @@ module.exports = function (bot) {
 
         case 'colors':
         case 'colours':
-            bot.say(cmd.network, cmd.replyto, 'Available colors:', Object.keys(irc.colors.codes).join(', '));
+            plugin.say(cmd.network, cmd.replyto, 'Available colors:', Object.keys(irc.colors.codes).join(', '));
 
             break;
 
@@ -331,8 +336,8 @@ module.exports = function (bot) {
     });
 
     // start fetching feeds right away if configured
-    if (bot.config.get('plugins.rss.autostart')) {
-        bot.log('Starting RSS feeds automatically.');
+    if (this.config.get('plugins.rss.autostart')) {
+        this.log('Starting RSS feeds automatically.');
         startFetching();
     }
 };
