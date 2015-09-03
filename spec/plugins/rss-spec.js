@@ -1,3 +1,4 @@
+var fs = require('fs');
 var mkdirp = require('mkdirp');
 var nock = require('nock');
 var path = require('path');
@@ -11,6 +12,9 @@ describe('RSS feed plugin', function () {
     var mockTransport;
     var db;
 
+    var rssFile = fs.readFileSync(__dirname + '/../data/feed.rss', {encoding: 'utf8'});
+    var atomFile = fs.readFileSync(__dirname + '/../data/feed.atom', {encoding: 'utf8'});
+
     beforeEach(function (done) {
         mkdirp.sync(path.join(__dirname, '../temp'));
 
@@ -21,29 +25,33 @@ describe('RSS feed plugin', function () {
         mockTransport = new MockTransport('irc1');
         mockTransport2 = new MockTransport('irc2');
 
+        // Set up mock responses.
+        nock('http://feed.com')
+            .get('/rss').reply(200, rssFile)
+            .get('/atom').reply(200, atomFile);
+
         // Clear the database and set up spies.
         db = mockBot.plugins.rss.db;
-        db.remove({}, {multi: true}, done);
-        spyOn(db, 'insert').and.callThrough();
-        spyOn(db, 'find').and.callThrough();
-        spyOn(db, 'remove').and.callThrough();
-
-        // Spy on internal functions.
-        spyOn(mockBot.plugins.rss, 'fetchFeed');
+        db.remove({}, {multi: true}, function () {
+            spyOn(db, 'insert').and.callThrough();
+            spyOn(db, 'find').and.callThrough();
+            spyOn(db, 'remove').and.callThrough();
+            done();
+        });
     });
 
-    it('should quickly fetch a feed on command', function () {
+    it('should quickly fetch a feed on command', function (done) {
+        spyOn(mockBot.plugins.rss, 'fetchLatestItem');
         mockBot.emit('command', mockTransport, {
             replyto: '#channel1',
             command: 'rss',
             args: 'quick http://feed.com/rss',
         });
-        expect(mockBot.plugins.rss.fetchFeed).toHaveBeenCalledWith({
-            name: '',
-            url: 'http://feed.com/rss',
-            transport: 'irc1',
-            target: '#channel1',
-        });
+        setTimeout(function () {
+            expect(mockTransport.say).toHaveBeenCalledWith(
+                '[] Example entry | http://www.example.com/blog/post/1');
+            done();
+        }, 100);
     });
 
     it('should add a feed to the database on command', function (done) {
@@ -107,7 +115,7 @@ describe('RSS feed plugin', function () {
             ], done);
         });
 
-        it('should list all feeds in the current channel on command', function () {
+        it('should list all feeds in the current channel on command', function (done) {
             mockBot.emit('command', mockTransport, {
                 replyto: '#channel1',
                 command: 'rss',
@@ -120,7 +128,21 @@ describe('RSS feed plugin', function () {
                     ' irc1 #channel1 Feed #1\u000f http://feed.com/rss');
                 expect(mockTransport.say).toHaveBeenCalledWith('#channel1',
                     ' irc1 #channel1 \u000305Feed #2\u000f http://anotherfeed.com/rss');
+                done();
             }, 100);
+        });
+    });
+
+    it('should fetch a feed and pass the latest item to a callback', function (done) {
+        mockBot.plugins.rss.fetchLatestItem({
+            url: 'http://feed.com/rss',
+            color: 'dark_red',
+        }, function (err, item) {
+            expect(item).toEqual({
+                title: 'Example entry',
+                url: 'http://www.example.com/blog/post/1',
+            });
+            done();
         });
     });
 });

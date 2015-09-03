@@ -25,9 +25,11 @@ describe('Quote plugin', function () {
 
         // Clear the database and set up spies.
         db = mockBot.plugins.quote.db;
-        db.remove({}, {multi: true}, done);
-        spyOn(db, 'insert').and.callThrough();
-        spyOn(db, 'find').and.callThrough();
+        db.remove({}, {multi: true}, function () {
+            spyOn(db, 'insert').and.callThrough();
+            spyOn(db, 'find').and.callThrough();
+            done();
+        });
     });
 
     describe('commands', function () {

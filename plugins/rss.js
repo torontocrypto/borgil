@@ -28,24 +28,22 @@ module.exports = function () {
     var plugin = this;
 
     // fetch a feed and reply with the latest entry
-    this.fetchFeed = function (feed, ignoreCache) {
+    this.fetchLatestItem = function (feed, callback) {
         plugin.log('[%s] Fetching feed at', feed.name, feed.url);
 
-        // build cache validation headers
+        // Build cache validation headers.
         var headers = {};
-        if (!ignoreCache && feed.name) {
-            if (feed.etag) {
-                plugin.log('[%s] Sending saved etag:', feed.name, feed.etag);
-                headers['If-None-Match'] = feed.etag;
-            }
-            if (feed.last_modified) {
-                plugin.log('[%s] Sending saved last-modified date:', feed.name, feed.last_modified);
-                headers['If-Modified-Since'] = feed.last_modified;
-            }
+        if (feed.etag) {
+            plugin.log('[%s] Sending saved etag:', feed.name || '', feed.etag);
+            headers['If-None-Match'] = feed.etag;
+        }
+        if (feed.last_modified) {
+            plugin.log('[%s] Sending saved last-modified date:',
+                feed.name || '', feed.last_modified);
+            headers['If-Modified-Since'] = feed.last_modified;
         }
 
         var parser = new FeedParser({});
-        var render_item_template = handlebars.compile(plugin.config.get('plugins.rss.item_template', defaults.item_template));
 
         request.get({
             url: feed.url,
@@ -61,7 +59,7 @@ module.exports = function () {
             if (res.statusCode != 200) return plugin.error('Bad status code %d from RSS feed', res.statusCode, feed.name);
 
             if (feed.name) {
-                // save cache validation headers
+                // Save cache validation headers.
                 var update = null;
                 if (res.headers.etag) {
                     plugin.log('[%s] Got etag:', feed.name, res.headers.etag);
@@ -88,53 +86,55 @@ module.exports = function () {
         });
 
         parser
-        .on('error', function (e) {
-            plugin.error('RSS parser error:', e.message);
+        .on('error', function (err) {
+            plugin.error('RSS parser error:', err.message);
+            callback(err, null);
         })
         .once('readable', function () {
-            item = this.read();
+            var item = this.read();
 
-            if (feed.name) {
-                // a set of properties to compare with the last item
-                var latest = {
-                    title: entities.decode(item.title),
-                    url: item.link,
-                };
-
-                // compare and skip if unchanged
-                if (!ignoreCache && feed.latest && Object.keys(latest).every(function (key) {
-                    return latest[key] == feed.latest[key];
-                })) {
-                    plugin.log('[%s] Latest item is the same as last fetch; skipping.', feed.name);
-                    return;
-                }
-
-                // save latest item
-                plugin.db.update({
-                    transport: feed.transport,
-                    target: feed.target,
-                    name: feed.name,
-                }, {
-                    $set: {
-                        latest: latest,
-                    }
-                }, {}, function (err, count) {
-                    if (count) plugin.log('[%s] Saved latest item.', feed.name)
-                });
-            }
-
-            // template data, including color codes
-            var data = extend({
+            plugin.log('[%s] Got latest item from feed.', feed.name || '');
+            callback(null, {
                 title: entities.decode(item.title),
                 url: item.link,
-                name: feed.name,
-                color: feed.color,
-            },
-            irc.colors.codes);
-
-            plugin.log('[%s] Displaying link:', feed.name, item.link);
-            plugin.transports(feed.transport).say(feed.target, render_item_template(data));
+            });
         });
+    };
+
+    this.displayItem = function (feed, item) {
+        var render_item_template = handlebars.compile(
+            plugin.config.get('plugins.rss.item_template', defaults.item_template));
+
+        var data = extend({
+            title: entities.decode(item.title),
+            url: item.link,
+            name: feed.name,
+            color: feed.color,
+        },
+        irc.colors.codes);
+
+        plugin.log('[%s] Displaying link:', feed.name, item.link);
+        plugin.transports(feed.transport).say(feed.target, render_item_template(data));
+    };
+
+    this.updateFeed = function (feed, item) {
+        // Save latest item to database.
+        plugin.db.update({
+            transport: feed.transport,
+            target: feed.target,
+            name: feed.name,
+        }, {
+            $set: {
+                latest: item,
+            }
+        }, {}, function (err, count) {
+            if (count) plugin.log('[%s] Saved latest item.', feed.name);
+        });
+    };
+
+    this.itemsEqual = function (item1, item2) {
+        return ((item1.title === item2.title) &&
+                (item1.url === item2.url));
     };
 
     function findFeeds(cmd, callback) {
@@ -166,7 +166,13 @@ module.exports = function () {
                 plugin.log('Fetching RSS feeds...');
                 plugin.db.find({}, function (err, feeds) {
                     feeds.forEach(function (feed) {
-                        plugin.fetchFeed(feed);
+                        plugin.fetchLatestItem(feed, function (err, item) {
+                            if (feed.latest && plugin.itemsEqual(feed.latest, item)) {
+                                return plugin.log('[%s] Latest item is the same as last fetch; skipping.', feed.name || '');
+                            }
+                            plugin.displayItem(feed, item);
+                            plugin.updateFeed(feed, item);
+                        });
                     });
                 });
             }, interval * 60000);
@@ -182,17 +188,6 @@ module.exports = function () {
         var args = m[2];
 
         switch (action) {
-
-        case 'quick':
-            plugin.fetchFeed({
-                name: '',
-                url: args,
-                transport: cmd.transport.name,
-                target: cmd.replyto,
-            });
-
-            break;
-
 
         case 'add':
             // Feed names can contain spaces as long as they are wrapped in double quotes.
@@ -286,22 +281,31 @@ module.exports = function () {
             break;
 
 
-        case 'fetch':
-            // manually fetch feeds and display new items
-            findFeeds(cmd, function (err, feeds) {
-                feeds.forEach(function (feed) {
-                    plugin.fetchFeed(feed);
-                });
+        case 'quick':
+            var feed = {
+                transport: cmd.transport.name,
+                target: cmd.replyto,
+                url: args,
+            };
+
+            plugin.fetchLatestItem(feed, function (err, item) {
+                plugin.displayItem(feed, item);
             });
 
             break;
 
 
+        case 'fetch':
         case 'latest':
-            // manually fetch feeds and display latest items, even if already cached
+            // Manually fetch feeds and display latest item.
+            // 'latest' will always display; 'fetch' will only display if new.
             findFeeds(cmd, function (err, feeds) {
-                feeds.forEach(function (feed) {
-                    plugin.fetchFeed(feed, true);
+                plugin.fetchLatestItem(feed, function (err, item) {
+                    if (action === 'fetch' && feed.latest && plugin.itemsEqual(feed.latest, item)) {
+                        return plugin.log('[%s] Latest item is the same as last fetch; skipping.', feed.name || '');
+                    }
+                    plugin.displayItem(feed, item);
+                    plugin.updateFeed(feed, item);
                 });
             });
 
