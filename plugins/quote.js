@@ -17,7 +17,7 @@ var default_templates = {
 
 
 module.exports = function () {
-    this.memory.quotedb = new DataStore({
+    this.db = new DataStore({
         filename: path.join(this.config.get('dbdir', ''), 'quote.db'),
         autoload: true
     });
@@ -45,7 +45,7 @@ module.exports = function () {
                 msg.transport = cmd.transport.name;
 
                 // Store the message in the quote database.
-                plugin.memory.quotedb.insert(msg, function (err, quote) {
+                plugin.db.insert(msg, function (err, quote) {
                     if (err) {
                         return plugin.log('Error saving quote on %s/%s:', msg.transport, msg.replyto, msg.text);
                     }
@@ -82,7 +82,7 @@ module.exports = function () {
         };
         if (nick) filter.from = nick;
 
-        this.memory.quotedb.find(filter, function (err, quotes) {
+        this.db.find(filter, function (err, quotes) {
             if (err) return plugin.error('Error fetching quote:', err.message);
 
             var templates = extend({}, default_templates,

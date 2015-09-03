@@ -11,7 +11,7 @@ var request = require('request');
 var defaults = {
     interval: 10,
     item_template: '[{{color}}{{name}}{{reset}}] {{{title}}} | {{url}}',
-    list_template: ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}'
+    list_template: ' {{transport}} {{target}} {{color}}{{name}}{{reset}} {{url}}'
 };
 
 var interval;
@@ -20,7 +20,7 @@ var intervalObj;
 var entities = new Entities();
 
 module.exports = function () {
-    var db = this.memory.rssdb = new DataStore({
+    this.db = new DataStore({
         filename: path.join(this.config.get('dbdir', ''), 'rss.db'),
         autoload: true,
     });
@@ -28,7 +28,7 @@ module.exports = function () {
     var plugin = this;
 
     // fetch a feed and reply with the latest entry
-    function fetch(feed, ignoreCache) {
+    this.fetchFeed = function (feed, ignoreCache) {
         plugin.log('[%s] Fetching feed at', feed.name, feed.url);
 
         // build cache validation headers
@@ -72,8 +72,8 @@ module.exports = function () {
                     update = extend(update || {}, {last_modified: res.headers['last-modified']});
                 }
                 if (update !== null) {
-                    db.update({
-                        network: feed.network,
+                    plugin.db.update({
+                        transport: feed.transport,
                         target: feed.target,
                         name: feed.name,
                     }, {
@@ -110,8 +110,8 @@ module.exports = function () {
                 }
 
                 // save latest item
-                db.update({
-                    network: feed.network,
+                plugin.db.update({
+                    transport: feed.transport,
                     target: feed.target,
                     name: feed.name,
                 }, {
@@ -133,23 +133,23 @@ module.exports = function () {
             irc.colors.codes);
 
             plugin.log('[%s] Displaying link:', feed.name, item.link);
-            plugin.say(feed.network, feed.target, render_item_template(data));
+            plugin.transports(feed.transport).say(feed.target, render_item_template(data));
         });
-    }
+    };
 
     function findFeeds(cmd, callback) {
-        var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
+        var args = cmd.args.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
 
         // fetch feeds from all channels (admin only)
         var all = args[1] == 'all' && plugin.config.get('admins', []).indexOf(cmd.nick) > -1;
 
         var filter = {
-            network: cmd.network,
+            transport: cmd.transport.name,
             target: cmd.replyto,
         };
         if (args[1] && args[1] != 'all') filter.name = args[1].replace(/^"|"$/g, '');
 
-        db.find(all ? {} : filter, callback);
+        plugin.db.find(all ? {} : filter, callback);
     }
 
     function startFetching(newInterval) {
@@ -164,9 +164,9 @@ module.exports = function () {
         if (!intervalObj) {
             intervalObj = setInterval(function () {
                 plugin.log('Fetching RSS feeds...');
-                db.find({}, function (err, feeds) {
+                plugin.db.find({}, function (err, feeds) {
                     feeds.forEach(function (feed) {
-                        fetch(feed);
+                        plugin.fetchFeed(feed);
                     });
                 });
             }, interval * 60000);
@@ -177,15 +177,17 @@ module.exports = function () {
     }
 
     this.addCommand('rss', function (cmd) {
-        var args = cmd.args.split(/\s+/);
+        var m = cmd.args.match(/^(\w+)(?:\s+(.*))?$/);
+        var action = m[1];
+        var args = m[2];
 
-        switch(args[0]) {
+        switch (action) {
 
         case 'quick':
-            fetch({
+            plugin.fetchFeed({
                 name: '',
-                url: args[1],
-                network: cmd.network,
+                url: args,
+                transport: cmd.transport.name,
                 target: cmd.replyto,
             });
 
@@ -194,7 +196,7 @@ module.exports = function () {
 
         case 'add':
             // Feed names can contain spaces as long as they are wrapped in double quotes.
-            var addArgs = cmd.args.match(/^add\s+("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
+            var addArgs = args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
 
             if (!addArgs) {
                 cmd.transport.say(cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
@@ -211,7 +213,7 @@ module.exports = function () {
             }
             name = name.replace(/^"|"$/g, '');
 
-            db.find({
+            plugin.db.find({
                 transport: cmd.transport.name,
                 target: cmd.replyto,
                 $or: [
@@ -228,12 +230,12 @@ module.exports = function () {
                 }
                 else {
                     // add the feed to the list for this target
-                    db.insert({
+                    plugin.db.insert({
                         transport: cmd.transport.name,
                         target: cmd.replyto,
                         name: name,
                         url: url,
-                        color: irc.colors.codes[color] || '',
+                        color: color,
                     }, function (err, feed) {
                         if (err) return plugin.error('Error saving feed:', err.message);
                         if (feed) cmd.transport.say(cmd.replyto, 'Added 1 feed.');
@@ -248,11 +250,11 @@ module.exports = function () {
         case 'delete':
         case 'remove':
         case 'rm':
-            var delArgs = cmd.args.match(/^("[^"]+"|[\w-]+)?/);
+            var delArgs = args.match(/^("[^"]+"|[\w-]+)?/);
 
             if (delArgs[1]) {
-                db.remove({
-                    network: cmd.network,
+                plugin.db.remove({
+                    transport: cmd.transport.name,
                     target: cmd.replyto,
                     name: delArgs[1].replace(/^"|"$/g, ''),
                 }, function (err, count) {
@@ -265,17 +267,19 @@ module.exports = function () {
 
         case 'list':
             findFeeds(cmd, function (err, feeds) {
-                plugin.say(cmd.network, cmd.replyto, 'Found %d feed%s.', feeds.length, feeds.length == 1 ? '' : 's');
+                cmd.transport.say(cmd.replyto, 'Found %d feed%s.', feeds.length,
+                    feeds.length == 1 ? '' : 's');
 
                 var render_list_template = handlebars.compile(plugin.config.get('plugins.rss.list_template', defaults.list_template));
 
                 feeds.forEach(function (feed) {
                     // add colors to feed info for use as template data
+                    feed.color = irc.colors.codes[feed.color] || '';
                     for (color in irc.colors.codes) {
                         feed[color] = irc.colors.codes[color];
                     }
 
-                    plugin.say(cmd.network, cmd.replyto, render_list_template(feed));
+                    cmd.transport.say(cmd.replyto, render_list_template(feed));
                 });
             });
 
@@ -286,7 +290,7 @@ module.exports = function () {
             // manually fetch feeds and display new items
             findFeeds(cmd, function (err, feeds) {
                 feeds.forEach(function (feed) {
-                    fetch(feed);
+                    plugin.fetchFeed(feed);
                 });
             });
 
@@ -297,7 +301,7 @@ module.exports = function () {
             // manually fetch feeds and display latest items, even if already cached
             findFeeds(cmd, function (err, feeds) {
                 feeds.forEach(function (feed) {
-                    fetch(feed, true);
+                    plugin.fetchFeed(feed, true);
                 });
             });
 

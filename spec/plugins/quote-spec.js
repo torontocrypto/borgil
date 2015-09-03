@@ -11,6 +11,7 @@ var MockTransport = require('../helpers/mock-transport');
 describe('Quote plugin', function () {
     var mockBot;
     var mockTransport;
+    var db;
 
     beforeEach(function (done) {
         mkdirp.sync(path.join(__dirname, '../temp'));
@@ -22,11 +23,11 @@ describe('Quote plugin', function () {
         mockBot.use('quote');
         mockTransport = new MockTransport();
 
-        spyOn(mockBot.memory.quotedb, 'insert').and.callThrough();
-        spyOn(mockBot.memory.quotedb, 'find').and.callThrough();
-
-        // Clear the database.
-        mockBot.memory.quotedb.remove({}, done);
+        // Clear the database and set up spies.
+        db = mockBot.plugins.quote.db;
+        db.remove({}, {multi: true}, done);
+        spyOn(db, 'insert').and.callThrough();
+        spyOn(db, 'find').and.callThrough();
     });
 
     describe('commands', function () {
@@ -54,7 +55,7 @@ describe('Quote plugin', function () {
                 command: 'remember',
                 args: ''
             });
-            expect(mockBot.memory.quotedb.insert).toHaveBeenCalledWith(jasmine.objectContaining({
+            expect(db.insert).toHaveBeenCalledWith(jasmine.objectContaining({
                 transport: 'mockTransport',
                 from: 'somebodyelse',
                 replyto: '#channel1',
@@ -72,7 +73,7 @@ describe('Quote plugin', function () {
                 command: 'remember',
                 args: 'somebody',
             });
-            expect(mockBot.memory.quotedb.insert).toHaveBeenCalledWith(jasmine.objectContaining({
+            expect(db.insert).toHaveBeenCalledWith(jasmine.objectContaining({
                 transport: 'mockTransport',
                 from: 'somebody',
                 replyto: '#channel1',
@@ -90,7 +91,7 @@ describe('Quote plugin', function () {
                 command: 'remember',
                 args: 'somebody first',
             });
-            expect(mockBot.memory.quotedb.insert).toHaveBeenCalledWith(jasmine.objectContaining({
+            expect(db.insert).toHaveBeenCalledWith(jasmine.objectContaining({
                 transport: 'mockTransport',
                 from: 'somebody',
                 replyto: '#channel1',
