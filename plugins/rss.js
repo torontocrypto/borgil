@@ -106,15 +106,12 @@ module.exports = function () {
             plugin.config.get('plugins.rss.item_template', defaults.item_template));
 
         var data = extend({
-            title: entities.decode(item.title),
-            url: item.link,
             name: feed.name,
             color: feed.color,
-        },
-        irc.colors.codes);
+        }, item, irc.colors.codes);
 
         plugin.log('[%s] Displaying link:', feed.name, item.link);
-        plugin.transports(feed.transport).say(feed.target, render_item_template(data));
+        plugin.transports[feed.transport].say(feed.target, render_item_template(data));
     };
 
     this.updateFeed = function (feed, item) {
@@ -283,6 +280,7 @@ module.exports = function () {
 
         case 'quick':
             var feed = {
+                name: 'QUICK',
                 transport: cmd.transport.name,
                 target: cmd.replyto,
                 url: args,

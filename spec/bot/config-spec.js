@@ -94,4 +94,26 @@ describe('Configuration object', function () {
         expect(config.get('four.five')[0].six).toEqual({seven: 'eight'});
         expect(config.get('nine.ten.eleven')).toEqual(['twelve']);
     });
+
+    it('should return undefined when getting a child of a scalar or null value', function () {
+        var config = new Config({
+            one: null,
+            two: 'two',
+            three: 3,
+            four: undefined,
+            five: ['five', 5],
+            'six.seven': null,
+            eight: {
+                nine: null,
+            },
+        });
+        expect(config.get('one.child')).toEqual(undefined);
+        expect(config.get('one.child.child')).toEqual(undefined);
+        expect(config.get('two.child')).toEqual(undefined);
+        expect(config.get('three.child')).toEqual(undefined);
+        expect(config.get('four.child')).toEqual(undefined);
+        expect(config.get('five.child')).toEqual(undefined);
+        expect(config.get('six.seven.child')).toEqual(undefined);
+        expect(config.get('eight.nine.child')).toEqual(undefined);
+    });
 });

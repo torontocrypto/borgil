@@ -8,8 +8,10 @@ module.exports = function () {
     this.transports = {};
     for (tpname in tpconfigs) {
         var tpconfig = tpconfigs[tpname];
-        if (tpconfig.type in tptypes) {
-            this.transports[tpname] = new tptypes[tpconfig.type](this, tpname, tpconfig);
+        for (tptype in tptypes) {
+            if (tpconfig.type.toLowerCase() == tptype.toLowerCase()) {
+                this.transports[tpname] = new tptypes[tptype](this, tpname, tpconfig);
+            }
         }
     }
 };

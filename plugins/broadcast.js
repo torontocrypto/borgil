@@ -2,7 +2,7 @@ var extend = require('extend');
 var handlebars = require('handlebars');
 
 
-var default_template = '[{{{source}}}] <{{{from}}}> {{{text}}}';
+var default_template = '[{{{source}}}] <{{{from_name}}}> {{{text}}}';
 
 module.exports = function () {
     function broadcastToTargets(msg, targets) {
@@ -17,7 +17,7 @@ module.exports = function () {
 
             // 'source' is the channel name, with transport prepended if it's not the current one.
             var data = extend({
-                source: (target.transport != msg.transport.name ? (msg.transport.name + ':') : '') + msg.replyto,
+                source: (target.transport != msg.transport.name ? (msg.transport.name + ':') : '') + msg.replyto_name,
             }, msg);
 
             this.transports[target.transport].say(target.channel, render_template(data));

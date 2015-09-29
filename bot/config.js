@@ -56,8 +56,8 @@ var Config = module.exports = function (config_init) {
         var configfile = fs.readFileSync(config_init, 'utf-8');
 
         try {
-            if (config_init.match(/\.ya?ml$/i)) this.config = yaml.safeLoad(configfile);
-            else this.config = JSON.parse(configfile);
+            if (config_init.match(/\.ya?ml$/i)) this.config = splitValue(yaml.safeLoad(configfile));
+            else this.config = splitValue(JSON.parse(configfile));
         } catch (e) {
             console.error('Error reading config file at ' + config_init + ':', e.message);
         }

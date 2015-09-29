@@ -56,15 +56,26 @@ Telegram.prototype._getUpdates = function () {
         else {
             // Emit events for any messages received.
             (result || []).forEach(function (update) {
+                if (debug) {
+                    transport.bot.log.debug('%s: Got update:', transport.name, JSON.stringify(update));
+                }
+
                 transport.offset = Math.max(transport.offset, update.update_id + 1);
+
+                var from_name = update.message.from.username || (update.message.from.first_name +
+                    (update.message.from.last_name ? ' ' + update.message.from.last_name : ''));
 
                 var data = {
                     from: update.message.from.id,
+                    from_name: from_name,
                     to: update.message.chat.id,
                     replyto: update.message.chat.id,
+                    replyto_name: update.message.chat.title || from_name,
                     text: update.message.text,
                     time: new Date(update.message.date * 1000),
                 };
+
+                console.log(data);
 
                 // If this message is a command, add command properties and emit a command event.
                 var m = update.message.text.match(/^\/(\S+)(?:\s+(.*?))?\s*$/);
@@ -75,10 +86,6 @@ Telegram.prototype._getUpdates = function () {
                 }
 
                 transport.emit('message', data);
-
-                if (debug) {
-                    transport.bot.log.debug('%s: Got update:', transport.name, update);
-                }
             });
         }
 
@@ -94,3 +101,9 @@ Telegram.prototype.say = function (target) {
         text: text,
     });
 };
+
+Object.defineProperty(Telegram.prototype, 'channels', {
+    get: function () {
+        return this.bot.config.get('transports.' + this.name + '.chat_ids', []);
+    }
+});

@@ -17,10 +17,17 @@ var log_defaults = {
 module.exports = function () {
     var level = this.config.get('log.debug') ? 'debug' : 'info';
     var render_filename = handlebars.compile(this.config.get('log.filename', log_defaults.filename));
-    var logfile = path.join(this.config.get('log.dir', log_defaults.dir), render_filename({
-            date: moment().format(this.config.get('log.date_format', log_defaults.date_format))
-        })
-    );
+
+    var logdir = this.config.get('log.dir', log_defaults.dir);
+    try {
+        fs.mkdirSync(logdir);
+    }
+    catch (err) {
+        if (err.code != 'EEXIST') throw err;
+    }
+    var logfile = path.join(logdir, render_filename({
+        date: moment().format(this.config.get('log.date_format', log_defaults.date_format))
+    }));
 
     var transports = [];
     if (logfile) {

@@ -40,8 +40,10 @@ var IRC = module.exports = function (bot, name, config) {
     this.irc.on('message', function (nick, to, text, msg) {
         var data = {
             from: nick,
+            from_name: nick,
             to: to,
             replyto: to == this.nick ? nick : to,
+            replyto_name: nick,
             text: text,
             time: new Date(),
         };
@@ -66,3 +68,9 @@ IRC.prototype.say = function (target) {
     var text = util.format.apply(null, Array.prototype.slice.call(arguments, 1));
     this.irc.say(target, text);
 };
+
+Object.defineProperty(IRC.prototype, 'channels', {
+    get: function () {
+        return Object.keys(this.irc.chans);
+    }
+});

@@ -9,8 +9,9 @@ log:
 dbdir: db
 admins:
     - saltire
-networks:
+transports:
     oftc:
+        type: irc
         host: irc.oftc.net
         nick: borgil
         opts:
@@ -20,12 +21,18 @@ networks:
             userName: borgil
             realName: Borgil of Menelvagor
     i2p:
+        type: irc
         host: localhost
         nick: borgil
         opts:
             port: 6668
             userName: borgil
             realName: Borgil of Menelvagor
+    telegram:
+        type: telegram
+        token: your-telegram-token
+        chat_ids:
+            - 0123456789
 plugins:
     broadcast:
         broadcast_all: false
@@ -33,10 +40,10 @@ plugins:
         target_sets:
             -
                 -
-                    network: oftc
+                    transport: oftc
                     channel: '#torontocrypto'
                 -
-                    network: i2p
+                    transport: i2p
                     channel: '#torontocrypto'
     ddg-scraper:
         template: '[DDG] {{{title}}} | {{url}}'

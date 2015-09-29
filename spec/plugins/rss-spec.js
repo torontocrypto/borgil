@@ -19,11 +19,12 @@ describe('RSS feed plugin', function () {
         mkdirp.sync(path.join(__dirname, '../temp'));
 
         mockBot = new MockBot({
-            dbdir: path.join(__dirname, '../temp')
+            dbdir: path.join(__dirname, '../temp'),
+            'plugins.rss.item_template': '[{{name}}] {{{title}}} | {{url}}'
         });
         mockBot.use('rss');
-        mockTransport = new MockTransport('irc1');
-        mockTransport2 = new MockTransport('irc2');
+        mockBot.transports['irc1'] = mockTransport = new MockTransport('irc1');
+        mockBot.transports['irc2'] = mockTransport2 = new MockTransport('irc2');
 
         // Set up mock responses.
         nock('http://feed.com')
@@ -41,17 +42,16 @@ describe('RSS feed plugin', function () {
     });
 
     it('should quickly fetch a feed on command', function (done) {
-        spyOn(mockBot.plugins.rss, 'fetchLatestItem');
         mockBot.emit('command', mockTransport, {
             replyto: '#channel1',
             command: 'rss',
             args: 'quick http://feed.com/rss',
         });
         setTimeout(function () {
-            expect(mockTransport.say).toHaveBeenCalledWith(
-                '[] Example entry | http://www.example.com/blog/post/1');
+            expect(mockTransport.say).toHaveBeenCalledWith('#channel1',
+                '[QUICK] Example entry | http://www.example.com/blog/post/1');
             done();
-        }, 100);
+        }, 500);
     });
 
     it('should add a feed to the database on command', function (done) {
