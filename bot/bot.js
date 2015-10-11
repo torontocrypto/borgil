@@ -12,7 +12,6 @@ var Bot = module.exports = function (configfile) {
 
     this.config = new Config(configfile);
 
-    this.clients = {};
     this.plugins = {};
     this.memory = {};
 

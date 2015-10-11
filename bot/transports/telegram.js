@@ -75,9 +75,8 @@ Telegram.prototype._getUpdates = function () {
                     time: new Date(update.message.date * 1000),
                 };
 
-                console.log(data);
-
                 // If this message is a command, add command properties and emit a command event.
+                // Currently this uses a slash instead of the configured command character.
                 var m = update.message.text.match(/^\/(\S+)(?:\s+(.*?))?\s*$/);
                 if (m) {
                     data.command = m[1];

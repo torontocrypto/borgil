@@ -4,6 +4,8 @@ var util = require('util');
 var Transport = require('./transport');
 
 
+var default_commandchar = '.';
+
 var IRC = module.exports = function (bot, name, config) {
     Transport.call(this, bot, name);
     var transport = this;
@@ -43,13 +45,13 @@ var IRC = module.exports = function (bot, name, config) {
             from_name: nick,
             to: to,
             replyto: to == this.nick ? nick : to,
-            replyto_name: nick,
+            replyto_name: to == this.nick ? nick : to,
             text: text,
             time: new Date(),
         };
 
         // If this message is a command, add command properties and emit a command event.
-        var commandchar = bot.config.get('commandchar', '.')
+        var commandchar = bot.config.get('commandchar', default_commandchar)
             .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
         var commandRegex = new RegExp('^' + commandchar + '(\\S+)(?:\\s+(.*?))?\\s*$');
         var m = text.match(commandRegex);

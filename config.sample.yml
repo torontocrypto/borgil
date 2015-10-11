@@ -2,7 +2,7 @@ commandchar: .
 buffer: 100
 log:
     dir: logs
-    filename: borgil--{{date}}.log
+    filename_template: borgil--{{date}}.log
     date_format: YYYY-MM-DD--HH-mm-ss
     console: true
     debug: false
@@ -32,11 +32,11 @@ transports:
         type: telegram
         token: your-telegram-token
         chat_ids:
-            - 0123456789
+            - 123456789
 plugins:
     broadcast:
         broadcast_all: false
-        template: '[{{{source}}}] <{{{from}}}> {{{text}}}'
+        template: '[{{{source}}}] <{{{from_name}}}> {{{text}}}'
         target_sets:
             -
                 -
@@ -73,6 +73,6 @@ plugins:
     url:
         template: '[ {{{title}}} ] - {{domain}}'
     youtube:
-        api_key:
+        api_key: yourGoogleApiKey
         url_template: '[YouTube] {{{title}}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}'
         search_template: '[YouTube] {{{title}}} | {{url}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}'

@@ -3,6 +3,8 @@ module.exports = function () {
     // that we send the command from. We should be able to join/part channels
     // on other connected networks as well. Example: .join oftc/#torontocrypto
 
+    // TODO: Admins should be configured on the transport level, not the global level.
+
     this.addCommand(['join'], function (cmd) {
         if (this.config.get('admins').indexOf(cmd.from) == -1) return;
 

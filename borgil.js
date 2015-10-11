@@ -3,8 +3,8 @@ var Bot = require('./bot/bot');
 
 var borgil = new Bot('config.yml');
 
-borgil.use('echo');
-borgil.use('errortest');
+// borgil.use('echo');
+// borgil.use('errortest');
 borgil.use('admin');
 borgil.use('broadcast');
 borgil.use('ddg-scraper');

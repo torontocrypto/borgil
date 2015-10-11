@@ -7,7 +7,7 @@ var winston = require('winston');
 
 var log_defaults = {
     dir: 'logs',
-    filename: 'bot--{{date}}.log',
+    filename_template: 'bot--{{date}}.log',
     date_format: 'YYYY-MM-DD--HH-mm-ss',
     console: false,
     debug: false,
@@ -16,7 +16,7 @@ var log_defaults = {
 
 module.exports = function () {
     var level = this.config.get('log.debug') ? 'debug' : 'info';
-    var render_filename = handlebars.compile(this.config.get('log.filename', log_defaults.filename));
+    var render_filename = handlebars.compile(this.config.get('log.filename_template', log_defaults.filename_template));
 
     var logdir = this.config.get('log.dir', log_defaults.dir);
     try {

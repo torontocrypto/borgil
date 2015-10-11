@@ -8,7 +8,9 @@ describe('Broadcast plugin', function () {
     var ircB;
 
     beforeEach(function () {
-        mockBot = new MockBot();
+        mockBot = new MockBot({
+            'plugins.broadcast.template': '[{{{source}}}] <{{{from}}}> {{{text}}}'
+        });
 
         ircA = new MockTransport();
         ircA.name = 'ircA';
@@ -68,7 +70,7 @@ describe('Broadcast plugin', function () {
                         channel: '#channelAAA',
                     },
                     {
-                        transpost: 'ircA',
+                        transport: 'ircA',
                         channel: '#channelZZZ',
                     },
                 ],

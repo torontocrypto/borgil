@@ -12,7 +12,6 @@ var MockBot = module.exports = function (config) {
 
     this.config = new Config(config);
 
-    this.clients = {};
     this.plugins = {};
     this.memory = {};
 

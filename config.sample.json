@@ -3,7 +3,7 @@
     "buffer": 100,
     "log": {
         "dir": "logs",
-        "filename": "borgil--{{date}}.log",
+        "filename_template": "borgil--{{date}}.log",
         "date_format": "YYYY-MM-DD--HH-mm-ss",
         "console": true,
         "debug": false
@@ -12,8 +12,9 @@
     "admins": [
         "saltire"
     ],
-    "networks": {
+    "transports": {
         "oftc": {
+            "type": "irc",
             "host": "irc.oftc.net",
             "nick": "borgil",
             "opts": {
@@ -25,6 +26,7 @@
             }
         },
         "i2p": {
+            "type": "irc",
             "host": "localhost",
             "nick": "borgil",
             "opts": {
@@ -32,20 +34,27 @@
                 "userName": "borgil",
                 "realName": "Borgil of Menelvagor"
             }
+        },
+        "telegram": {
+            "type": "telegram",
+            "token": "your-telegram-token",
+            "chat_ids": [
+                123456789
+            ]
         }
     },
     "plugins": {
         "broadcast": {
             "broadcast_all": false,
-            "template": "[{{{source}}}] <{{{from}}}> {{{text}}}",
+            "template": "[{{{source}}}] <{{{from_name}}}> {{{text}}}",
             "target_sets": [
                 [
                     {
-                        "network": "oftc",
+                        "transport": "oftc",
                         "channel": "#torontocrypto"
                     },
                     {
-                        "network": "i2p",
+                        "transport": "i2p",
                         "channel": "#torontocrypto"
                     }
                 ]
@@ -91,7 +100,7 @@
             "template": "[ {{{title}}} ] - {{domain}}"
         },
         "youtube": {
-            "api_key": "",
+            "api_key": "yourGoogleApiKey",
             "url_template": "[YouTube] {{{title}}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}",
             "search_template": "[YouTube] {{{title}}} | {{url}} | Length: {{length}} | Channel: {{channel}} | Uploaded: {{date}} | Views: {{views}} | +{{likes}} -{{dislikes}} | Comments: {{comments}}"
         }

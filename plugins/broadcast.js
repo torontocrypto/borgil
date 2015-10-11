@@ -17,7 +17,8 @@ module.exports = function () {
 
             // 'source' is the channel name, with transport prepended if it's not the current one.
             var data = extend({
-                source: (target.transport != msg.transport.name ? (msg.transport.name + ':') : '') + msg.replyto_name,
+                source: (target.transport != msg.transport.name ? (msg.transport.name + ':') : '') +
+                    (msg.replyto_name || msg.replyto),
             }, msg);
 
             this.transports[target.transport].say(target.channel, render_template(data));
