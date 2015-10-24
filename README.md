@@ -11,10 +11,16 @@ Borgil is written in Node.js, and is currently experimental.
 Features may change without notice, and many are unstable.
 But that's the fun part.
 
+## Dependencies
+
+Borgil requires the following packages (on Debian/Ubuntu):
+* `nodejs-legacy`
+* `nodejs`
+* `npm`
 
 ## Setup
 
-To install, just clone the repo and run `npm install` from its directory.
+Execute `npm install` from its directory. 
 
 To run it, you need a startup script.
 A default, `borgil.js`, is included.
