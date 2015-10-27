@@ -136,8 +136,8 @@ module.exports = function (bot) {
     }
 
     function findFeeds(cmd, callback) {
-        var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
-
+        //var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/);
+	var args = cmd.text.match(/^\S+(?:\s+("[^"]+"|[\w-]+))?/g);
         // fetch feeds from all channels (admin only)
         var all = args[1] == 'all' && bot.config.get('admins', []).indexOf(cmd.nick) > -1;
 
@@ -146,7 +146,7 @@ module.exports = function (bot) {
             target: cmd.replyto,
         };
         if (args[1] && args[1] != 'all') filter.name = args[1].replace(/^"|"$/g, '');
-
+	bot.log('DEBUG: filer = %s', filter);
         db.find(all ? {} : filter, callback);
     }
 
@@ -176,7 +176,7 @@ module.exports = function (bot) {
 
     bot.addCommand('rss', function (cmd) {
         var args = cmd.args.split(/\s+/);
-
+	bot.log('DEBUG: cmd = %s', cmd.args);
         switch(args[0]) {
 
         case 'quick':
@@ -192,7 +192,8 @@ module.exports = function (bot) {
 
         case 'add':
             // Feed names can contain spaces as long as they are wrapped in double quotes.
-            var addArgs = cmd.args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
+            //var addArgs = cmd.args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
+            var addArgs = cmd.args.match(/(https?:\/\/\S+\.\S+)|"(.+)"|(\w+)/g);
 
             if (!addArgs) {
                 bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
@@ -260,6 +261,7 @@ module.exports = function (bot) {
 
         case 'list':
             findFeeds(cmd, function (err, feeds) {
+
                 bot.say(cmd.network, cmd.replyto, 'Found %d feed%s.', feeds.length, feeds.length == 1 ? '' : 's');
 
                 var render_list_template = handlebars.compile(bot.config.get('plugins.rss.list_template', defaults.list_template));
