@@ -176,8 +176,15 @@ module.exports = function (bot) {
 
     bot.addCommand('rss', function (cmd) {
         var args = cmd.args.split(/\s+/);
+        var usage = 'RSS Plugin - Monitors RSS feeds and posts new articles to the channel. Available commands: quick, add, list, delete, fetch, latest, start, stop, colors';
+
 	bot.log('DEBUG: cmd = %s', cmd.args);
+
         switch(args[0]) {
+
+        case 'help':
+            bot.say(cmd.network, cmd.replyto, usage);
+            break;
 
         case 'quick':
             fetch({
@@ -191,18 +198,18 @@ module.exports = function (bot) {
 
 
         case 'add':
-            // Feed names can contain spaces as long as they are wrapped in double quotes.
-            //var addArgs = cmd.args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
-            var addArgs = cmd.args.match(/(https?:\/\/\S+\.\S+)|"(.+)"|(\w+)/g);
+            var addArgs = cmd.args
+                .replace(/^(add)/, '')
+                .match(/(https?:\/\/\S+\.\S+)|"(.+)"|(\w+)/g);
 
             if (!addArgs) {
-                bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
+                bot.say(cmd.network, cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]. Note <feed name> can contain spaces as long as they are wrapped in double quotes.');
                 break;
             }
 
-            var name = addArgs[1],
-                url = addArgs[2],
-                color = addArgs[3] || '';
+            var name = addArgs[0],
+                url = addArgs[1],
+                color = addArgs[2] || '';
 
             if (name == 'all') {
                 bot.say(cmd.network, cmd.replyto, 'Invalid feed name.');
@@ -244,18 +251,25 @@ module.exports = function (bot) {
         case 'delete':
         case 'remove':
         case 'rm':
-            var delArgs = cmd.args.match(/^("[^"]+"|[\w-]+)?/);
+            var delArgs = cmd.args
+                .replace(/^(delete|del|remove)/, '')
+                .match(/^("[^"]+"|[\w-]+)?/);
 
-            if (delArgs[1]) {
-                db.remove({
-                    network: cmd.network,
-                    target: cmd.replyto,
-                    name: delArgs[1].replace(/^"|"$/g, ''),
-                }, function (err, count) {
-                    if (count) bot.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
-                });
+            if (!delArgs) {
+                bot.say(cmd.network, cmd.replyto, 'Usage: .rss del <feed name>. Note: <feed name> can contain spaces as long as they are wrapped in double quotes.');
+                break;
             }
 
+            var feedName = delArgs[1].replace(/^"|"$/g, '');
+            bot.log('DEBUG: [%s] Deleting feed', feedName, 'from command', cmd);
+            db.remove({
+                network: cmd.network,
+                target: cmd.replyto,
+                name: feedName,
+            }, function (err, count) {
+                if (err) bot.error('Error deleting feed:', err);
+                if (count) bot.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
+            });
             break;
 
 
@@ -328,6 +342,7 @@ module.exports = function (bot) {
 
 
         default:
+            bot.say(cmd.network, cmd.replyto, usage);
             break;
         }
     });
