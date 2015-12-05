@@ -1,3 +1,6 @@
+## Caution: the developer of this project has ghosted leaving this project in an unworkable state
+## Bug fixes are helpful!
+
 # Borgil, the multi-purpose messaging bot
 
 Borgil is a messaging bot that can talk over multiple network protocols.
