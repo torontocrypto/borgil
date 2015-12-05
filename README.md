@@ -1,5 +1,4 @@
-## Caution: the developer of this project has ghosted leaving this project in an unworkable state
-## Bug fixes are helpful!
+## Caution: the developer of this project has ghosted leaving this project in an unworkable state.
 
 # Borgil, the multi-purpose messaging bot
 
