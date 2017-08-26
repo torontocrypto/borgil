@@ -10,7 +10,15 @@ var IRC = module.exports = function (bot, name, config) {
     Transport.call(this, bot, name);
     var transport = this;
 
-    this.irc = new irc.Client(config.host, config.nick, config.opts);
+    var client = this.irc = new irc.Client(config.host, config.nick, config.opts);
+
+    // Connect to channels manually after receiving MOTD.
+    this.irc.on('motd', function () {
+        (config.channels || []).forEach(function (channel) {
+            var keyword = config.channel_keywords && config.channel_keywords[channel];
+            client.join(channel + (keyword ? ' ' + keyword : ''));
+        });
+    });
 
     // Set up some log events.
     this.irc.conn.on('connect', function () {

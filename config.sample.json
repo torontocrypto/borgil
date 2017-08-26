@@ -23,7 +23,12 @@
                 "selfSigned": true,
                 "userName": "borgil",
                 "realName": "Borgil of Menelvagor"
-            }
+            },
+        "channels": [
+            "#some-example-channel-name"
+        ],
+        "channel_keywords": {
+            "#some-example-channel-name": "channelkeyword"
         },
         "i2p": {
             "type": "irc",
