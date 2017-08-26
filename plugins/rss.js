@@ -107,7 +107,7 @@ module.exports = function () {
 
         var data = extend({
             name: feed.name,
-            color: feed.color,
+            color: irc.colors.codes[feed.color] || feed.color,
         }, item, irc.colors.codes);
 
         plugin.log('[%s] Displaying link:', feed.name, item.link);
@@ -181,14 +181,14 @@ module.exports = function () {
 
     this.addCommand('rss', function (cmd) {
         var m = cmd.args.match(/^(\w+)(?:\s+(.*))?$/);
-        var action = m[1];
-        var args = m[2];
+        var action = m && m[1];
+        var args = m && m[2];
 
         switch (action) {
 
         case 'add':
             // Feed names can contain spaces as long as they are wrapped in double quotes.
-            var addArgs = args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
+            var addArgs = args && args.match(/^("[^"]+"|[\w-]+)\s+(https?:\/\/\S+\.\S+)(?:\s+(\w+))?/);
 
             if (!addArgs) {
                 cmd.transport.say(cmd.replyto, 'Usage: .rss add <feed name> <feed url> [<color>]');
@@ -242,9 +242,9 @@ module.exports = function () {
         case 'delete':
         case 'remove':
         case 'rm':
-            var delArgs = args.match(/^("[^"]+"|[\w-]+)?/);
+            var delArgs = args && args.match(/^("[^"]+"|[\w-]+)?/);
 
-            if (delArgs[1]) {
+            if (delArgs && delArgs[1]) {
                 plugin.db.remove({
                     transport: cmd.transport.name,
                     target: cmd.replyto,
@@ -298,12 +298,14 @@ module.exports = function () {
             // Manually fetch feeds and display latest item.
             // 'latest' will always display; 'fetch' will only display if new.
             findFeeds(cmd, function (err, feeds) {
-                plugin.fetchLatestItem(feed, function (err, item) {
-                    if (action === 'fetch' && feed.latest && plugin.itemsEqual(feed.latest, item)) {
-                        return plugin.log('[%s] Latest item is the same as last fetch; skipping.', feed.name || '');
-                    }
-                    plugin.displayItem(feed, item);
-                    plugin.updateFeed(feed, item);
+                feeds.forEach(function (feed) {
+                    plugin.fetchLatestItem(feed, function (err, item) {
+                        if (action === 'fetch' && feed.latest && plugin.itemsEqual(feed.latest, item)) {
+                            return plugin.log('[%s] Latest item is the same as last fetch; skipping.', feed.name || '');
+                        }
+                        plugin.displayItem(feed, item);
+                        plugin.updateFeed(feed, item);
+                    });
                 });
             });
 
