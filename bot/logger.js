@@ -14,11 +14,11 @@ var log_defaults = {
 };
 
 
-module.exports = function () {
-    var level = this.config.get('log.debug') ? 'debug' : 'info';
-    var render_filename = handlebars.compile(this.config.get('log.filename_template', log_defaults.filename_template));
+module.exports = function (bot) {
+    var level = bot.config.get('log.debug') ? 'debug' : 'info';
+    var render_filename = handlebars.compile(bot.config.get('log.filename_template', log_defaults.filename_template));
 
-    var logdir = this.config.get('log.dir', log_defaults.dir);
+    var logdir = bot.config.get('log.dir', log_defaults.dir);
     try {
         fs.mkdirSync(logdir);
     }
@@ -26,7 +26,7 @@ module.exports = function () {
         if (err.code != 'EEXIST') throw err;
     }
     var logfile = path.join(logdir, render_filename({
-        date: moment().format(this.config.get('log.date_format', log_defaults.date_format))
+        date: moment().format(bot.config.get('log.date_format', log_defaults.date_format))
     }));
 
     var transports = [];
@@ -38,7 +38,7 @@ module.exports = function () {
             timestamp: true,
         }));
     }
-    if (this.config.get('log.console')) {
+    if (bot.config.get('log.console')) {
         transports.push(new winston.transports.Console({
             colorize: true,
             level: level,
@@ -46,7 +46,7 @@ module.exports = function () {
         }));
     }
 
-    this.log = new winston.Logger({
+    bot.log = new winston.Logger({
         transports: transports
     });
 };
