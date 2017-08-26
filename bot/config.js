@@ -47,19 +47,25 @@ function splitValue(value) {
 var Config = module.exports = function (config_init) {
     this.config = {};
 
-    // If an object is passed, use it as the config.
     if (typeof config_init == 'object') {
+        // If an object is passed, use it as the config.
         this.config = splitValue(config_init);
     }
-    // If a string is passed, treat it as a filename and read that file as YAML or JSON.
-    else if (typeof config_init == 'string') {
-        var configfile = fs.readFileSync(config_init, 'utf-8');
+    else {
+        // Otherwise treat it as a filename and read that file as YAML or JSON.
+        // Fall back to default filenames if no existing filename was passed.
+        var configpath = [config_init, 'config.json', 'config.yml'].find(fs.existsSync.bind(fs));
+        if (!configpath) {
+            return console.error('Config file not found.');
+        }
+
+        var configfile = fs.readFileSync(configpath, 'utf-8');
 
         try {
-            if (config_init.match(/\.ya?ml$/i)) this.config = splitValue(yaml.safeLoad(configfile));
+            if (configpath.match(/\.ya?ml$/i)) this.config = splitValue(yaml.safeLoad(configfile));
             else this.config = splitValue(JSON.parse(configfile));
         } catch (e) {
-            console.error('Error reading config file at ' + config_init + ':', e.message);
+            console.error('Error reading config file at ' + configpath + ':', e.message);
         }
     }
 };
