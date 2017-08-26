@@ -107,7 +107,7 @@ module.exports = function () {
 
         var data = extend({
             name: feed.name,
-            color: feed.color,
+            color: irc.colors.codes[feed.color] || feed.color,
         }, item, irc.colors.codes);
 
         plugin.log('[%s] Displaying link:', feed.name, item.link);
