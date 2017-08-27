@@ -16,9 +16,9 @@ var Bot = module.exports = function (configfile) {
     this.memory = {};
 
     // Include extra functionality.
-    require('./logger').call(this);
-    require('./transports').call(this);
-    require('./buffer').call(this);
+    require('./logger')(this);
+    require('./transports')(this);
+    require('./buffer')(this);
 };
 // Extend the event emitter class.
 util.inherits(Bot, EventEmitter);
