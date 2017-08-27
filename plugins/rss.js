@@ -250,7 +250,7 @@ module.exports = function () {
                     target: cmd.replyto,
                     name: delArgs[1].replace(/^"|"$/g, ''),
                 }, function (err, count) {
-                    if (count) plugin.say(cmd.network, cmd.replyto, 'Removed 1 feed.');
+                    if (count) cmd.transport.say(cmd.replyto, 'Removed 1 feed.');
                 });
             }
 
@@ -313,8 +313,8 @@ module.exports = function () {
 
 
         case 'start':
-            var started = startFetching(parseInt(args[1]));
-            plugin.say(cmd.network, cmd.replyto,
+            var started = startFetching(parseInt(args && args[1]));
+            cmd.transport.say(cmd.replyto,
                 (started ? 'Starting to fetch feeds every %d minutes.' : 'Feeds are already being fetched every %d minutes.'),
                 interval);
 
@@ -323,7 +323,7 @@ module.exports = function () {
 
         case 'stop':
             if (intervalObj) {
-                plugin.say(cmd.network, cmd.replyto, 'Stopped fetching feeds.');
+                cmd.transport.say(cmd.replyto, 'Stopped fetching feeds.');
                 clearInterval(intervalObj);
                 intervalObj = null;
             }
@@ -333,7 +333,7 @@ module.exports = function () {
 
         case 'colors':
         case 'colours':
-            plugin.say(cmd.network, cmd.replyto, 'Available colors:', Object.keys(irc.colors.codes).join(', '));
+            cmd.transport.say(cmd.replyto, 'Available colors:', Object.keys(irc.colors.codes).join(', '));
 
             break;
 
