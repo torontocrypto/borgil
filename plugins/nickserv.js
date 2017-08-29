@@ -35,7 +35,6 @@ module.exports = function () {
 
             waitForIdentifySuccess.call(plugin, transport);
         });
-        this.log(transport);
     }
 };
 
