@@ -20,7 +20,7 @@ module.exports = function () {
         var plugin = this;
 
         // Wait for IRC registered event, and send identify info.
-        transport.on('registered', function () {
+        transport.irc.on('registered', function () {
             var nick = plugin.config.get('transports.' + tpname + '.nick', '');
             var password = plugin.config.get('plugins.nickserv.networks.' + tpname + '.password',
                 '');
@@ -64,12 +64,12 @@ function waitForIdentifySuccess(transport) {
         if (Array.isArray(nsOpts.channels) && nsOpts.channels.length) {
             plugin.log('%s: Joining %d NickServ-only channels.',
                 transport.name, nsOpts.channels.length);
-
+            plugin.log(nsOpts);
             nsOpts.channels.forEach(function (channel) {
                 if (channel in (nsOpts.channel_keywords || {})) {
                     channel += ' ' + nsOpts.channel_keywords[channel];
                 }
-                transport.join(channel);
+                transport.irc.join(channel);
             });
         }
     });
