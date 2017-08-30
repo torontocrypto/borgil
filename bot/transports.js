@@ -14,4 +14,10 @@ module.exports = function (bot) {
             }
         }
     }
+    const numtransports = Object.keys(tpconfigs).length;
+    if (numtransports > 0) {
+        bot.log.info("Found %d transports in configuration.", numtransports);
+    } else {
+        bot.log.info("WARNING no transports configured.")
+    }
 };
