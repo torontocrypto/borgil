@@ -16,3 +16,4 @@ borgil.use('rss');
 borgil.use('sed');
 borgil.use('url');
 borgil.use('youtube');
+borgil.use('phabfeed');
