@@ -111,7 +111,7 @@ module.exports = function () {
         }, item, irc.colors.codes);
 
         plugin.log('[%s] Displaying link:', feed.name, item.link);
-        plugin.transports[feed.network].say(feed.target, render_item_template(data));
+        plugin.transports[feed.transport].say(feed.target, render_item_template(data));
     };
 
     this.updateFeed = function (feed, item) {
