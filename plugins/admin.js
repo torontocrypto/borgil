@@ -1,12 +1,12 @@
-module.exports = function () {
+module.exports = function (plugin) {
     // TODO: Currently we can only join or part channels on the same network
     // that we send the command from. We should be able to join/part channels
     // on other connected networks as well. Example: .join oftc/#torontocrypto
 
     // TODO: Admins should be configured on the transport level, not the global level.
 
-    this.addCommand(['join'], function (cmd) {
-        if (this.config.get('admins').indexOf(cmd.from) == -1) return;
+    plugin.addCommand(['join'], function (cmd) {
+        if (plugin.config.get('admins').indexOf(cmd.from) == -1) return;
 
         var channel = cmd.args.split(/\s+/)[0];
         if (cmd.transport.channels.indexOf(channel) > -1) {
@@ -17,8 +17,8 @@ module.exports = function () {
         });
     });
 
-    this.addCommand(['part', 'leave'], function (cmd) {
-        if (this.config.get('admins').indexOf(cmd.from) == -1) return;
+    plugin.addCommand(['part', 'leave'], function (cmd) {
+        if (plugin.config.get('admins').indexOf(cmd.from) == -1) return;
 
         var args = cmd.args.match(/^(\S+)(?:\s+(.*))?/);
         if (!args) return;

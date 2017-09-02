@@ -14,7 +14,7 @@ var Plugin = module.exports = function (bot, name) {
     this.transports = bot.transports;
 
     bot.log.info('Activating plugin:', name);
-    require('../plugins/' + name).call(this, this);
+    require('../plugins/' + name)(this);
 };
 
 
@@ -26,7 +26,7 @@ Plugin.prototype.listen = function (pattern, callback) {
         var match = msg.text.match(pattern);
         if (match) {
             try {
-                callback.call(plugin, extend({
+                callback(extend({
                     transport: transport,
                     match: match,
                 }, msg));
@@ -49,7 +49,7 @@ Plugin.prototype.addCommand = function (commands, callback) {
     this.bot.on('command', function (transport, msg) {
         if (commands.indexOf(msg.command) > -1) {
             try {
-                callback.call(plugin, extend({
+                callback(extend({
                     transport: transport,
                 }, msg));
             }

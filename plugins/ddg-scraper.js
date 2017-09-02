@@ -5,11 +5,10 @@ var request = require('request');
 
 var default_template = '[DDG] {{{title}}} | {{url}}';
 
-module.exports = function () {
-    this.addCommand(['ddg', 'duck', 's', 'search'], function (cmd) {
-        this.log('Got search term:', cmd.args);
+module.exports = function (plugin) {
+    plugin.addCommand(['ddg', 'duck', 's', 'search'], function (cmd) {
+        plugin.log('Got search term:', cmd.args);
 
-        var plugin = this;
         // DuckDuckGo has no public API for their syndicated search results.
         // So let's scrape the page! Of course this will break if they change their layout.
         request.get('https://duckduckgo.com/html?q=' + cmd.args, function (err, res, body) {

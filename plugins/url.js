@@ -7,19 +7,17 @@ var default_template = '[ {{{title}}} ] - {{domain}}';
 
 var entities = new Entities();
 
-module.exports = function () {
+module.exports = function (plugin) {
     // fetch title for URLs and echo it into the channel
-    this.listen(/https?:\/\/([^\/\s]+)\S*/i, function (msg) {
+    plugin.listen(/https?:\/\/([^\/\s]+)\S*/i, function (msg) {
         // cancel if the message matches any patterns placed in url_exclusions by other plugins
-        if ((this.memory.url_exclusions || []).some(function (pattern) {
+        if ((plugin.memory.url_exclusions || []).some(function (pattern) {
             return !!msg.text.match(pattern);
         })) return;
 
         var url = msg.match[0],
             domain = msg.match[1];
-        this.log('Got URL:', url);
-
-        var plugin = this;
+        plugin.log('Got URL:', url);
 
         request.get(url, function (err, res, body) {
             if (!err && res.statusCode == 200) {
