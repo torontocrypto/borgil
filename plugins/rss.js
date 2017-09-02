@@ -128,8 +128,7 @@ module.exports = function (plugin) {
     };
 
     plugin.itemsEqual = function (item1, item2) {
-        return ((item1.title === item2.title) &&
-                (item1.url === item2.url));
+        return item1 && item2 && (item1.title === item2.title) && (item1.url === item2.url);
     };
 
     function findFeeds(cmd, callback) {
@@ -249,6 +248,7 @@ module.exports = function (plugin) {
                     name: delArgs[1].replace(/^"|"$/g, ''),
                 }, function (err, count) {
                     if (count) cmd.transport.say(cmd.replyto, 'Removed 1 feed.');
+                    else cmd.transport.say(cmd.replyto, 'No matching feed found.');
                 });
             }
 
