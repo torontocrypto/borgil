@@ -2,6 +2,9 @@
   "name": "borgil",
   "version": "1.0.0",
   "description": "An IRC bot that echoes messages between channels and networks.",
+  "engines": {
+    "node": "8.x"
+  },
   "main": "bot/bot.js",
   "scripts": {
     "start": "node borgil.js",
@@ -17,11 +20,11 @@
     "html-entities": "^1.1.2",
     "irc": "^0.3.12",
     "js-yaml": "^3.3.1",
-    "moment": "^2.10.3",
+    "mkdirp": "~0.5.1",
+    "moment-timezone": "^0.5.13",
     "nedb": "^1.1.2",
     "request": "^2.58.0",
-    "winston": "^1.0.0",
-    "mkdirp": "~0.5.1"
+    "winston": "^1.0.0"
   },
   "devDependencies": {
     "jasmine": "^2.3.1",
