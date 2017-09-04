@@ -9,9 +9,8 @@ describe('Search and replace plugin', function () {
     var mockTransport;
 
     beforeEach(function () {
-        mockBot = new MockBot();
+        mockBot = new MockBot({plugins: {sed: {}}});
         buffer(mockBot);  // Add normal buffer functionality.
-        mockBot.use('sed');
         mockTransport = new MockTransport();
     });
 

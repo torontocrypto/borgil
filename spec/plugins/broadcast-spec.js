@@ -12,24 +12,16 @@ describe('Broadcast plugin', function () {
             'plugins.broadcast.template': '[{{{source}}}] <{{{from}}}> {{{text}}}'
         });
 
-        ircA = new MockTransport();
-        ircA.name = 'ircA';
+        ircA = mockBot.transports.ircA = new MockTransport('ircA');
         ircA.channels = [
             '#channelA',
             '#channelAAA',
             '#channelZZZ',
         ];
-        ircB = new MockTransport();
-        ircB.name = 'ircB';
+        ircB = mockBot.transports.ircB = new MockTransport('ircB');
         ircB.channels = [
             '#channelB',
         ];
-        mockBot.transports = {
-            ircA: ircA,
-            ircB: ircB,
-        };
-
-        mockBot.use('broadcast');
     });
 
     describe('broadcasting to all', function () {

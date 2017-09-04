@@ -7,19 +7,15 @@ describe('IRC modes plugin', function () {
     var mockIRC;
 
     beforeEach(function () {
-        mockBot = new MockBot({
-            'plugins.modes.irc': '+B',
-        });
-
         mockIRC = new MockTransport();
         mockIRC.irc = {
             send: jasmine.createSpy(),
         };
-        mockBot.transports = {
-            irc: mockIRC,
-        };
 
-        mockBot.use('modes');
+        mockBot = new MockBot(
+            {'plugins.modes.irc': '+B'},
+            {irc: mockIRC}
+        );
     });
 
     it('should send a MODE command to an IRC transport once registered', function () {

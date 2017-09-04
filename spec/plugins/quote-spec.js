@@ -17,10 +17,10 @@ describe('Quote plugin', function () {
         mkdirp.sync(path.join(__dirname, '../temp'));
 
         mockBot = new MockBot({
-            dbdir: path.join(__dirname, '../temp')
+            dbdir: path.join(__dirname, '../temp'),
+            plugins: {quote: {}}
         });
         buffer(mockBot);  // Add normal buffer functionality.
-        mockBot.use('quote');
         mockTransport = new MockTransport();
 
         // Clear the database and set up spies.

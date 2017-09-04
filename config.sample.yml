@@ -38,6 +38,7 @@ transports:
         chat_ids:
             - 123456789
 plugins:
+    admin:
     broadcast:
         broadcast_all: false
         template: '[{{{source}}}] <{{{from_name}}}> {{{text}}}'
@@ -51,6 +52,7 @@ plugins:
                     channel: '#torontocrypto'
     ddg-scraper:
         template: '[DDG] {{{title}}} | {{url}}'
+    eightball:
     modes:
         i2p:
             - '+B'
@@ -69,11 +71,13 @@ plugins:
                 success: 'You are now identified'
                 channels:
                     - '#torontocrypto'
+    quote:
     rss:
         autostart: false
         interval: 10
         item_template: '[{{color}}{{name}}{{reset}}] {{{title}}} | {{url}}'
         list_template: ' {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}'
+    sed:
     url:
         template: '[ {{{title}}} ] - {{domain}}'
     youtube:
