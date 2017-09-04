@@ -2,6 +2,9 @@
   "name": "borgil",
   "version": "1.0.0",
   "description": "An IRC bot that echoes messages between channels and networks.",
+  "engines": {
+    "node": "8.x"
+  },
   "main": "bot/bot.js",
   "scripts": {
     "start": "node borgil.js",
