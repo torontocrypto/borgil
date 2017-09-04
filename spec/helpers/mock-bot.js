@@ -10,7 +10,7 @@ var MockBot = module.exports = function (config) {
     // Run the event emitter constructor.
     EventEmitter.call(this);
 
-    this.config = new Config(config);
+    this.config = new Config(config || {});
 
     this.plugins = {};
     this.memory = {};
