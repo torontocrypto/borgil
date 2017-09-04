@@ -12,8 +12,10 @@ var IRC = module.exports = function (bot, name, config) {
 
     var client = this.irc = new irc.Client(config.host, config.nick, config.opts);
 
-    // Connect to channels manually after receiving MOTD.
+    // Log a message and connect to channels manually after receiving MOTD.
     this.irc.on('motd', function () {
+        bot.log.info('Got MOTD from', transport.name);
+
         (config.channels || []).forEach(function (channel) {
             var keyword = config.channel_keywords && config.channel_keywords[channel];
             client.join(channel + (keyword ? ' ' + keyword : ''));

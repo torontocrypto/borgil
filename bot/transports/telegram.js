@@ -4,11 +4,17 @@ var util = require('util');
 var Transport = require('./transport');
 
 
-var TelegramAPI = function (token) {
-    this.token = token;
-}
+var Telegram = module.exports = function (bot, name, config) {
+    Transport.call(this, bot, name);
 
-TelegramAPI.prototype.send = function (method, params, callback) {
+    this.token = config.token;
+    this.offset = 0;
+
+    this._getUpdates();
+};
+util.inherits(Telegram, Transport);
+
+Telegram.prototype._send = function (method, params, callback) {
     request({
         uri: 'https://api.telegram.org/bot' + this.token + '/' + method,
         method: 'post',
@@ -24,17 +30,7 @@ TelegramAPI.prototype.send = function (method, params, callback) {
 
         if (callback) callback(null, body.result);
     });
-};
-
-
-var Telegram = module.exports = function (bot, name, config) {
-    Transport.call(this, bot, name);
-
-    this.offset = 0;
-    this.telegram = new TelegramAPI(config.token);
-    this._getUpdates();
-};
-util.inherits(Telegram, Transport);
+}
 
 Telegram.prototype._getUpdates = function () {
     var transport = this;
@@ -46,7 +42,7 @@ Telegram.prototype._getUpdates = function () {
     }
 
     // Make a long polling call to the API.
-    this.telegram.send('getUpdates', {
+    this._send('getUpdates', {
         offset: this.offset,
         timeout: 20
     }, function (err, result) {
@@ -95,7 +91,7 @@ Telegram.prototype._getUpdates = function () {
 
 Telegram.prototype.say = function (target) {
     var text = util.format.apply(null, Array.prototype.slice.call(arguments, 1));
-    this.telegram.send('sendMessage', {
+    this._send('sendMessage', {
         chat_id: target,
         text: text,
     });
