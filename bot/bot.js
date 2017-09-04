@@ -16,9 +16,9 @@ var Bot = module.exports = function (configfile) {
     this.memory = {};
 
     // Include extra functionality.
-    require('./logger')(this);
+    require('./log')(this);
     require('./transports')(this);
-    require('./buffer')(this);
+    require('./buffers')(this);
 
     // Activate all plugins mentioned in the plugins section of the config.
     for (pluginName in this.config.get('plugins', {})) {
