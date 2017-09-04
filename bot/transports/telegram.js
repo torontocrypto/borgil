@@ -4,11 +4,17 @@ var util = require('util');
 var Transport = require('./transport');
 
 
-var TelegramAPI = function (token) {
-    this.token = token;
-}
+var Telegram = module.exports = function (bot, name, config) {
+    Transport.call(this, bot, name);
 
-TelegramAPI.prototype.send = function (method, params, callback) {
+    this.token = config.token;
+    this.offset = 0;
+
+    this._getUpdates();
+};
+util.inherits(Telegram, Transport);
+
+Telegram.prototype._send = function (method, params, callback) {
     request({
         uri: 'https://api.telegram.org/bot' + this.token + '/' + method,
         method: 'post',
@@ -24,17 +30,7 @@ TelegramAPI.prototype.send = function (method, params, callback) {
 
         if (callback) callback(null, body.result);
     });
-};
-
-
-var Telegram = module.exports = function (bot, name, config) {
-    Transport.call(this, bot, name);
-
-    this.offset = 0;
-    this.telegram = new TelegramAPI(config.token);
-    this._getUpdates();
-};
-util.inherits(Telegram, Transport);
+}
 
 Telegram.prototype._getUpdates = function () {
     var transport = this;
@@ -46,7 +42,7 @@ Telegram.prototype._getUpdates = function () {
     }
 
     // Make a long polling call to the API.
-    this.telegram.send('getUpdates', {
+    this._send('getUpdates', {
         offset: this.offset,
         timeout: 20
     }, function (err, result) {
@@ -62,29 +58,12 @@ Telegram.prototype._getUpdates = function () {
 
                 transport.offset = Math.max(transport.offset, update.update_id + 1);
 
-                var from_name = update.message.from.username || (update.message.from.first_name +
-                    (update.message.from.last_name ? ' ' + update.message.from.last_name : ''));
-
-                var data = {
-                    from: update.message.from.id,
-                    from_name: from_name,
-                    to: update.message.chat.id,
-                    replyto: update.message.chat.id,
-                    replyto_name: update.message.chat.title || from_name,
-                    text: update.message.text,
-                    time: new Date(update.message.date * 1000),
-                };
-
-                // If this message is a command, add command properties and emit a command event.
-                // Currently this uses a slash instead of the configured command character.
-                var m = update.message.text.match(/^\/(\S+)(?:\s+(.*?))?\s*$/);
-                if (m) {
-                    data.command = m[1];
-                    data.args = (m[2] || '').trim();
-                    transport.emit('command', data);
+                if (update.message) {
+                    transport._parseMessage(update.message);
                 }
-
-                transport.emit('message', data);
+                if (update.channel_post) {
+                    transport._parseChannelPost(update.channel_post);
+                }
             });
         }
 
@@ -93,9 +72,66 @@ Telegram.prototype._getUpdates = function () {
     });
 };
 
+Telegram.prototype._parseMessage = function (message) {
+    var from_name = message.from.first_name +
+        (message.from.last_name ? ' ' + message.from.last_name : '');
+
+    var data = {
+        from: message.from.username || message.from.id,
+        from_name: from_name,
+        to: message.chat.id,
+        replyto: message.chat.id,
+        replyto_name: message.chat.title || from_name,
+        text: message.text || '',
+        time: new Date(message.date * 1000),
+    };
+
+    // If this message is a command, add command properties and emit a command event.
+    // Currently this uses a slash instead of the configured command character.
+    var cmd = (message.entities || []).find(function (entity) {
+        return entity.type === 'bot_command' && entity.offset === 0;
+    });
+    if (cmd) {
+        data.command = message.text.slice(cmd.offset + 1, cmd.length);
+        data.args = message.text.slice(cmd.offset + cmd.length).trim();
+        this.emit('command', data);
+    }
+
+    this.emit('message', data);
+};
+
+Telegram.prototype._parseChannelPost = function (post) {
+    // TODO: Telegram channel posts don't expose a sending user, but come from the channel itself.
+    // Most plugins assume a sending user, so don't emit message/command events for now.
+    // Instead let's emit 'broadcast' events, but maybe remove these in the future
+    // if plugins are updated to handle them as regular message events.
+
+    var from_name = post.chat.title || post.chat.username;
+
+    var data = {
+        from: post.chat.username || post.chat.id,
+        from_name: from_name,
+        text: post.text || '',
+        time: new Date(post.date * 1000),
+    };
+
+    // If this message is a command, add command properties and emit a command event.
+    // Currently this uses a slash instead of the configured command character.
+    var cmd = (post.entities || []).find(function (entity) {
+        return entity.type === 'bot_command' && entity.offset === 0;
+    });
+    if (cmd) {
+        data.command = post.text.slice(cmd.offset + 1, cmd.length);
+        data.args = post.text.slice(cmd.offset + cmd.length).trim();
+        this.emit('broadcastcommand', data);
+    }
+
+    this.emit('broadcast', data);
+};
+
 Telegram.prototype.say = function (target) {
     var text = util.format.apply(null, Array.prototype.slice.call(arguments, 1));
-    this.telegram.send('sendMessage', {
+    this._send('sendMessage', {
         chat_id: target,
         text: text,
     });
