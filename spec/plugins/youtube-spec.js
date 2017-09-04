@@ -15,7 +15,10 @@ describe('YouTube plugin', function () {
 
     beforeEach(function () {
         mockBot = new MockBot({
-            'plugins.youtube.api_key': 'abcdefg',
+            'plugins.youtube': {
+                api_key: 'abcdefg',
+                timezone: 'America/Toronto'
+            }
         });
         mockBot.use('youtube');
         mockTransport = new MockTransport();

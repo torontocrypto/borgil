@@ -1,6 +1,6 @@
 var fs = require('fs');
 var handlebars = require('handlebars');
-var moment = require('moment');
+var moment = require('moment-timezone');
 var path = require('path');
 var winston = require('winston');
 
@@ -13,7 +13,6 @@ var log_defaults = {
     debug: false,
 };
 
-
 module.exports = function (bot) {
     var level = bot.config.get('log.debug') ? 'debug' : 'info';
     var render_filename = handlebars.compile(bot.config.get('log.filename_template', log_defaults.filename_template));
@@ -25,8 +24,11 @@ module.exports = function (bot) {
     catch (err) {
         if (err.code != 'EEXIST') throw err;
     }
+
+    var date_format = bot.config.get('log.date_format', log_defaults.date_format);
+    var timezone = bot.config.get('log.date_format');
     var logfile = path.join(logdir, render_filename({
-        date: moment().format(bot.config.get('log.date_format', log_defaults.date_format))
+        date: (timezone ? moment.tz(timezone) : moment()).format(date_format)
     }));
 
     var transports = [];

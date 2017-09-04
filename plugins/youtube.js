@@ -1,5 +1,5 @@
 var handlebars = require('handlebars');
-var moment = require('moment');
+var moment = require('moment-timezone');
 var youtube = require('googleapis').youtube('v3');
 
 
@@ -70,13 +70,19 @@ module.exports = function (plugin) {
             var seconds = moment.duration(video.contentDetails.duration).asSeconds(),
                 length = moment.utc(0).seconds(seconds).format(seconds >= 3600 ? 'H:mm:ss' : 'm:ss');
 
+            var publishDate = moment(video.snippet.publishedAt);
+            var timezone = plugin.config.get('plugins.youtube.timezone');
+            if (timezone) {
+                publishDate.tz(timezone);
+            }
+
             // parse data
             callback({
                 id: video.id,
                 title: video.snippet.title,
                 description: video.snippet.description,
                 url: 'https://www.youtube.com/watch?v=' + video.id,
-                date: moment(video.snippet.publishedAt).format(plugin.config.get('plugins.youtube.date_format', defaults.date_format)),
+                date: publishDate.format(plugin.config.get('plugins.youtube.date_format', defaults.date_format)),
                 channel: video.snippet.channelTitle,
                 tags: video.snippet.tags,
                 length: length,
