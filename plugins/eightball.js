@@ -1,8 +1,7 @@
 var fs = require('fs');
 
-module.exports = function () {
-    var filename = this.config.get('plugins.eightball.response_file', './plugins/data/eightball.txt');
-    var plugin = this;
+module.exports = function (plugin) {
+    var filename = plugin.config.get('plugins.eightball.response_file', './plugins/data/eightball.txt');
 
     fs.readFile(filename, {encoding: 'UTF-8'}, function (err, data) {
         if (err) return plugin.error("Couldn't find 8-ball response file.");

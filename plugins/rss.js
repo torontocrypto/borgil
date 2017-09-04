@@ -19,16 +19,14 @@ var intervalObj;
 
 var entities = new Entities();
 
-module.exports = function () {
-    this.db = new DataStore({
-        filename: path.join(this.config.get('dbdir', ''), 'rss.db'),
+module.exports = function (plugin) {
+    plugin.db = new DataStore({
+        filename: path.join(plugin.config.get('dbdir', ''), 'rss.db'),
         autoload: true,
     });
 
-    var plugin = this;
-
     // fetch a feed and reply with the latest entry
-    this.fetchLatestItem = function (feed, callback) {
+    plugin.fetchLatestItem = function (feed, callback) {
         plugin.log('[%s] Fetching feed at', feed.name, feed.url);
 
         // Build cache validation headers.
@@ -82,7 +80,7 @@ module.exports = function () {
                 }
             }
 
-            this.pipe(parser);
+            res.pipe(parser);
         });
 
         parser
@@ -91,7 +89,7 @@ module.exports = function () {
             callback(err, null);
         })
         .once('readable', function () {
-            var item = this.read();
+            var item = parser.read();
 
             plugin.log('[%s] Got latest item from feed.', feed.name || '');
             callback(null, {
@@ -101,7 +99,7 @@ module.exports = function () {
         });
     };
 
-    this.displayItem = function (feed, item) {
+    plugin.displayItem = function (feed, item) {
         var render_item_template = handlebars.compile(
             plugin.config.get('plugins.rss.item_template', defaults.item_template));
 
@@ -114,7 +112,7 @@ module.exports = function () {
         plugin.transports[feed.transport].say(feed.target, render_item_template(data));
     };
 
-    this.updateFeed = function (feed, item) {
+    plugin.updateFeed = function (feed, item) {
         // Save latest item to database.
         plugin.db.update({
             transport: feed.transport,
@@ -129,7 +127,7 @@ module.exports = function () {
         });
     };
 
-    this.itemsEqual = function (item1, item2) {
+    plugin.itemsEqual = function (item1, item2) {
         return item1 && item2 && (item1.title === item2.title) && (item1.url === item2.url);
     };
 
@@ -178,7 +176,7 @@ module.exports = function () {
         }
     }
 
-    this.addCommand('rss', function (cmd) {
+    plugin.addCommand('rss', function (cmd) {
         var m = cmd.args.match(/^(\w+)(?:\s+(.*))?$/);
         var action = m && m[1];
         var args = m && m[2];
@@ -344,8 +342,8 @@ module.exports = function () {
     });
 
     // start fetching feeds right away if configured
-    if (this.config.get('plugins.rss.autostart')) {
-        this.log('Starting RSS feeds automatically.');
+    if (plugin.config.get('plugins.rss.autostart')) {
+        plugin.log('Starting RSS feeds automatically.');
         startFetching();
     }
 };

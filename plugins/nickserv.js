@@ -10,14 +10,12 @@ var default_opts = {
 };
 
 
-module.exports = function () {
-    for (tpname in this.config.get('plugins.nickserv.networks', {})) {
-        var transport = this.transports[tpname];
+module.exports = function (plugin) {
+    for (tpname in plugin.config.get('plugins.nickserv.networks', {})) {
+        var transport = plugin.transports[tpname];
         if (!transport || !transport.irc) {
             continue;
         }
-
-        var plugin = this;
 
         // Wait for IRC registered event, and send identify info.
         transport.irc.on('registered', function () {
@@ -33,21 +31,19 @@ module.exports = function () {
                 transport.irc.say('NickServ', 'IDENTIFY', password, nick);
             }
 
-            waitForIdentifySuccess.call(plugin, transport);
+            waitForIdentifySuccess(plugin, transport);
         });
     }
 };
 
-function waitForIdentifySuccess(transport) {
-    var plugin = this;
-
+function waitForIdentifySuccess(plugin, transport) {
     // Wait for an identification notice.
     transport.irc.once('notice', function (from, to, text, msg) {
         var nsOpts = extend(true, {}, default_opts,
             plugin.config.get('plugins.nickserv.networks.' + transport.name, {}));
 
         if (from !== 'NickServ' || !text.match(nsOpts.success)) {
-            waitForIdentifySuccess.call(plugin, transport);
+            waitForIdentifySuccess(plugin, transport);
             return;
         }
 

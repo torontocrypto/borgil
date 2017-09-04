@@ -16,25 +16,24 @@ var default_templates = {
 };
 
 
-module.exports = function () {
-    this.db = new DataStore({
-        filename: path.join(this.config.get('dbdir', ''), 'quote.db'),
+module.exports = function (plugin) {
+    plugin.db = new DataStore({
+        filename: path.join(plugin.config.get('dbdir', ''), 'quote.db'),
         autoload: true
     });
 
-    var plugin = this;
     var render_template;
 
-    this.addCommand('remember', function (cmd) {
+    plugin.addCommand('remember', function (cmd) {
         var args = cmd.args.split(/\s+/),
             nick = args[0],
             word = args[1];
 
         var templates = extend({}, default_templates,
-            this.config.get('plugins.quote.templates', {}));
+            plugin.config.get('plugins.quote.templates', {}));
 
         // Search the channel buffer for matching messages.
-        var buffer = (this.buffers[cmd.transport.name] || {})[cmd.replyto] || [];
+        var buffer = (plugin.buffers[cmd.transport.name] || {})[cmd.replyto] || [];
         if (!buffer.some(function (msg) {
             // Exclude command messages.
             if (msg.command) return false;
@@ -71,7 +70,7 @@ module.exports = function () {
         }
     });
 
-    this.addCommand('quote', function (cmd) {
+    plugin.addCommand('quote', function (cmd) {
         var args = cmd.args.split(/\s+/),
             nick = args[0],
             word = args[1];
@@ -82,7 +81,7 @@ module.exports = function () {
         };
         if (nick) filter.from = nick;
 
-        this.db.find(filter, function (err, quotes) {
+        plugin.db.find(filter, function (err, quotes) {
             if (err) return plugin.error('Error fetching quote:', err.message);
 
             var templates = extend({}, default_templates,

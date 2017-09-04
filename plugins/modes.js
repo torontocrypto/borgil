@@ -1,8 +1,7 @@
-module.exports = function () {
-    var plugin = this;
-    var modes = this.config.get('plugins.modes', {});
+module.exports = function (plugin) {
+    var modes = plugin.config.get('plugins.modes', {});
     for (tpname in modes) {
-        var transport = this.transports[tpname];
+        var transport = plugin.transports[tpname];
         if (!transport || !transport.irc) {
             continue;
         }

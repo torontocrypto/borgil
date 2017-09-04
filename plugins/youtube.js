@@ -11,26 +11,24 @@ var defaults = {
 
 var url_pattern = /(?:youtube.com\/watch\S*v=|youtu.be\/)([\w-]+)/;
 
-module.exports = function () {
+module.exports = function (plugin) {
     // add pattern to url exclusions so it doesn't also trigger the url plugin
-    if (!this.memory.url_exclusions) this.memory.url_exclusions = [];
-    this.memory.url_exclusions.push(url_pattern);
+    if (!plugin.memory.url_exclusions) plugin.memory.url_exclusions = [];
+    plugin.memory.url_exclusions.push(url_pattern);
 
-    var plugin = this;
-
-    this.listen(url_pattern, function (msg) {
-        this.log('Got YouTube URL:', msg.match[0]);
-        var render_template = handlebars.compile(this.config.get('plugins.youtube.url_template', defaults.url_template));
+    plugin.listen(url_pattern, function (msg) {
+        plugin.log('Got YouTube URL:', msg.match[0]);
+        var render_template = handlebars.compile(plugin.config.get('plugins.youtube.url_template', defaults.url_template));
         getVideo(msg.match[1], function (data) {
             msg.transport.say(msg.replyto, render_template(data));
         });
     });
 
-    this.addCommand(['youtube', 'yt'], function (cmd) {
-        var apiKey = this.config.get('plugins.youtube.api_key');
+    plugin.addCommand(['youtube', 'yt'], function (cmd) {
+        var apiKey = plugin.config.get('plugins.youtube.api_key');
         if (!apiKey || !cmd.args) return;
 
-        this.log('Got YouTube search:', cmd.args);
+        plugin.log('Got YouTube search:', cmd.args);
 
         youtube.search.list({
             auth: apiKey,
