@@ -20,7 +20,6 @@ describe('YouTube plugin', function () {
                 timezone: 'America/Toronto'
             }
         });
-        mockBot.use('youtube');
         mockTransport = new MockTransport();
     });
 

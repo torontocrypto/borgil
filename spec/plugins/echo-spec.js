@@ -7,8 +7,7 @@ describe('Echo plugin', function () {
     var mockTransport;
 
     beforeEach(function () {
-        mockBot = new MockBot();
-        mockBot.use('echo');
+        mockBot = new MockBot({plugins: {echo: {}}});
         mockTransport = new MockTransport();
     });
 

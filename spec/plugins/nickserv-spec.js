@@ -8,7 +8,7 @@ describe('IRC NickServ plugin', function () {
     var mockIRC;
 
     beforeEach(function () {
-        mockBot = new MockBot({
+        var config = {
             'transports.irc.nick': 'borgil',
             'plugins.nickserv.networks.irc': {
                 password: 'borgilpass',
@@ -21,18 +21,15 @@ describe('IRC NickServ plugin', function () {
                     '#torontocrypto': 'channelkey',
                 },
             },
-        });
+        };
 
         mockIRC = new MockTransport('irc');
         mockIRC.irc = new EventEmitter();
         mockIRC.irc.say = jasmine.createSpy();
         mockIRC.irc.join = jasmine.createSpy();
         mockIRC.irc.send = jasmine.createSpy();
-        mockBot.transports = {
-            irc: mockIRC,
-        };
 
-        mockBot.use('nickserv');
+        mockBot = new MockBot(config, {irc: mockIRC});
     });
 
     it('should send an identify message to NickServ once registered', function () {

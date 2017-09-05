@@ -1,4 +1,4 @@
-var buffer = require('../../bot/buffer');
+var buffers = require('../../bot/buffers');
 
 var MockBot = require('../helpers/mock-bot');
 var MockTransport = require('../helpers/mock-transport');
@@ -9,9 +9,8 @@ describe('Search and replace plugin', function () {
     var mockTransport;
 
     beforeEach(function () {
-        mockBot = new MockBot();
-        buffer(mockBot);  // Add normal buffer functionality.
-        mockBot.use('sed');
+        mockBot = new MockBot({plugins: {sed: {}}});
+        buffers(mockBot);  // Add normal buffer functionality.
         mockTransport = new MockTransport();
     });
 
