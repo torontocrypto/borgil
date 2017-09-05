@@ -26,7 +26,7 @@ module.exports = function (bot) {
     }
 
     var date_format = bot.config.get('log.date_format', log_defaults.date_format);
-    var timezone = bot.config.get('log.date_format');
+    var timezone = bot.config.get('log.timezone');
     var logfile = path.join(logdir, render_filename({
         date: (timezone ? moment.tz(timezone) : moment()).format(date_format)
     }));
