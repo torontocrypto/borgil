@@ -5,6 +5,14 @@ module.exports = function (bot) {
     };
     var tpconfigs = bot.config.get('transports', {});
 
+    var numtransports = Object.keys(tpconfigs).length;
+    if (numtransports) {
+        bot.log.info('Found %d transport(s) in configuration.', numtransports);
+    }
+    else {
+        bot.log.warn('No transports configured.')
+    }
+
     bot.transports = {};
     for (tpname in tpconfigs) {
         var tpconfig = tpconfigs[tpname];
@@ -13,11 +21,5 @@ module.exports = function (bot) {
                 bot.transports[tpname] = new tptypes[tptype](bot, tpname, tpconfig);
             }
         }
-    }
-    const numtransports = Object.keys(tpconfigs).length;
-    if (numtransports > 0) {
-        bot.log.info("Found %d transports in configuration.", numtransports);
-    } else {
-        bot.log.info("WARNING no transports configured.")
     }
 };

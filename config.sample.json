@@ -49,6 +49,7 @@
         }
     },
     "plugins": {
+        "admin": {},
         "broadcast": {
             "broadcast_all": false,
             "template": "[{{{source}}}] <{{{from_name}}}> {{{text}}}",
@@ -68,6 +69,7 @@
         "ddg-scraper": {
             "template": "[DDG] {{{title}}} | {{url}}"
         },
+        "eightball": {},
         "modes": {
             "i2p": [
                 "+B"
@@ -95,12 +97,14 @@
                 }
             }
         },
+        "quote": {},
         "rss": {
             "autostart": false,
             "interval": 10,
             "item_template": "[{{color}}{{name}}{{reset}}] {{{title}}} | {{url}}",
             "list_template": " {{network}} {{target}} {{color}}{{name}}{{reset}} {{url}}"
         },
+        "sed": {},
         "url": {
             "template": "[ {{{title}}} ] - {{domain}}"
         },

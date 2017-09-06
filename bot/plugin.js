@@ -8,15 +8,15 @@ var Plugin = module.exports = function (bot, name) {
     this.bot = bot;
     this.name = name;
 
-    this.config = bot.config;
-    this.buffers = bot.buffers;
-    this.memory = bot.memory;
-    this.transports = bot.transports;
-
-    bot.log.info('Activating plugin:', name);
     require('../plugins/' + name)(this);
 };
 
+Object.defineProperties(Plugin.prototype, {
+    config: {get: function () { return this.bot.config; }},
+    buffers: {get: function () { return this.bot.buffers; }},
+    memory: {get: function () { return this.bot.memory; }},
+    transports: {get: function () { return this.bot.transports; }}
+});
 
 // Start listening for a message matching a pattern, and call back with data about the message.
 Plugin.prototype.listen = function (pattern, callback) {

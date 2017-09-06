@@ -2,7 +2,7 @@ var fs = require('fs');
 var mkdirp = require('mkdirp');
 var path = require('path');
 
-var buffer = require('../../bot/buffer');
+var buffers = require('../../bot/buffers');
 
 var MockBot = require('../helpers/mock-bot');
 var MockTransport = require('../helpers/mock-transport');
@@ -17,10 +17,10 @@ describe('Quote plugin', function () {
         mkdirp.sync(path.join(__dirname, '../temp'));
 
         mockBot = new MockBot({
-            dbdir: path.join(__dirname, '../temp')
+            dbdir: path.join(__dirname, '../temp'),
+            plugins: {quote: {}}
         });
-        buffer(mockBot);  // Add normal buffer functionality.
-        mockBot.use('quote');
+        buffers(mockBot);  // Add normal buffer functionality.
         mockTransport = new MockTransport();
 
         // Clear the database and set up spies.

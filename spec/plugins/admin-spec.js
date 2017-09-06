@@ -9,8 +9,8 @@ describe('Admin plugin', function () {
     beforeEach(function () {
         mockBot = new MockBot({
             admins: ['admin'],
+            plugins: {admin: {}}
         });
-        mockBot.use('admin');
         mockTransport = new MockTransport();
         mockTransport.channels = [
             '#channel1',

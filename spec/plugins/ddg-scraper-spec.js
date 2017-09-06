@@ -13,8 +13,7 @@ describe('DuckDuckGo scraper plugin', function () {
     var searchPage = fs.readFileSync(path.join(__dirname, '../data/ddg.html'));
 
     beforeEach(function () {
-        mockBot = new MockBot();
-        mockBot.use('ddg-scraper');
+        mockBot = new MockBot({plugins: {'ddg-scraper': {}}});
         mockTransport = new MockTransport();
     });
 

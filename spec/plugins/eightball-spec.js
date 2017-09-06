@@ -7,8 +7,7 @@ describe('Magic 8-ball plugin', function () {
     var mockTransport;
 
     beforeEach(function (done) {
-        mockBot = new MockBot();
-        mockBot.use('eightball');
+        mockBot = new MockBot({plugins: {eightball: {}}});
         mockTransport = new MockTransport();
 
         // Allow a bit of time for the response file to be read
