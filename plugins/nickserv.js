@@ -25,10 +25,10 @@ module.exports = function (plugin) {
 
             plugin.log('%s: Sending IDENTIFY to NickServ.', tpname);
             if (plugin.config.get('plugins.nickserv.networks.' + tpname + '.nick_first')) {
-                transport.irc.say('NickServ', 'IDENTIFY', nick, password);
+                transport.say('NickServ', 'IDENTIFY', nick, password);
             }
             else {
-                transport.irc.say('NickServ', 'IDENTIFY', password, nick);
+                transport.say('NickServ', 'IDENTIFY', password, nick);
             }
 
             waitForIdentifySuccess(plugin, transport);

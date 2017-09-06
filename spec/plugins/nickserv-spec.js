@@ -25,7 +25,6 @@ describe('IRC NickServ plugin', function () {
 
         mockIRC = new MockTransport('irc');
         mockIRC.irc = new EventEmitter();
-        mockIRC.irc.say = jasmine.createSpy();
         mockIRC.irc.join = jasmine.createSpy();
         mockIRC.irc.send = jasmine.createSpy();
 
@@ -34,13 +33,13 @@ describe('IRC NickServ plugin', function () {
 
     it('should send an identify message to NickServ once registered', function () {
         mockIRC.irc.emit('registered');
-        expect(mockIRC.irc.say).toHaveBeenCalledWith('NickServ', 'IDENTIFY', 'borgilpass', 'borgil');
+        expect(mockIRC.say).toHaveBeenCalledWith('NickServ', 'IDENTIFY', 'borgilpass', 'borgil');
     });
 
     it('should send nick before password if so configured', function () {
         mockBot.config.set('plugins.nickserv.networks.irc.nick_first', true);
         mockIRC.irc.emit('registered');
-        expect(mockIRC.irc.say).toHaveBeenCalledWith('NickServ', 'IDENTIFY', 'borgil', 'borgilpass');
+        expect(mockIRC.say).toHaveBeenCalledWith('NickServ', 'IDENTIFY', 'borgil', 'borgilpass');
     });
 
     it('should join channels once identified on the network', function () {
