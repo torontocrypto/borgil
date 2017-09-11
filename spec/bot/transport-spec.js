@@ -1,6 +1,6 @@
 var EventEmitter = require('eventemitter2').EventEmitter2;
 
-var Transport = require('../../../bot/transports/transport');
+var Transport = require('../../bot/transport');
 
 
 describe('Transport base class', function () {

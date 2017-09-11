@@ -6,18 +6,20 @@ const yaml = require('js-yaml');
 
 
 function getValue(obj, elems) {
+    const value = obj[elems[0]];
+
     if (elems.length === 1) {
         // Leaf node.
-        return obj[elems[0]];
+        return value;
     }
 
-    if (typeof obj[elems[0]] !== 'object') {
+    if (!value || typeof value !== 'object') {
         // Branch doesn't exist.
         return undefined;
     }
 
     // Move down the tree.
-    return getValue(obj[elems[0]], elems.slice(1));
+    return getValue(value, elems.slice(1));
 }
 
 module.exports = class Config {
@@ -68,7 +70,8 @@ module.exports = class Config {
             // Parse each value individually.
             return value.map(Config.splitValue);
         }
-        if (typeof value === 'object') {
+
+        if (value && typeof value === 'object') {
             // Parse each key and value individually.
             const tree = {};
             Object.keys(value).forEach((key) => {
@@ -76,6 +79,7 @@ module.exports = class Config {
             });
             return tree;
         }
+
         return value;
     }
 
