@@ -13,7 +13,7 @@
     "import/no-dynamic-require": 0,
     "indent": [2, 4],
     "max-len": [2, 100],
-    "new-cap": [2, {"capIsNewExceptions": ["Router"]}],
+    "no-multi-assign": 0,
     "no-shadow": [2, {"allow": ["err"]}],
     "no-underscore-dangle": [2, {"allowAfterThis": true}],
     "object-curly-spacing": [2, "never"]

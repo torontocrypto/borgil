@@ -1,19 +1,21 @@
-var EventEmitter = require('eventemitter2').EventEmitter2;
+'use strict';
 
-var Transport = require('../../bot/transport');
+const EventEmitter = require('eventemitter2').EventEmitter2;
+
+const Transport = require('../../bot/transport');
 
 
-describe('Transport base class', function () {
-    var bot;
-    var transport;
+describe('Transport base class', () => {
+    let bot;
+    let transport;
 
-    beforeEach(function () {
+    beforeEach(() => {
         bot = new EventEmitter();
         transport = new Transport(bot, 'test');
     });
 
-    it('should pass events to the bot object', function () {
-        var handler = jasmine.createSpy();
+    it('should pass events to the bot object', () => {
+        const handler = jasmine.createSpy();
         bot.on('event', handler);
 
         transport.emit('event', 'arg1', 'arg2');

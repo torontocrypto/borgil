@@ -1,30 +1,32 @@
-var fs = require('fs');
-var nock = require('nock');
-var path = require('path');
+'use strict';
 
-var MockBot = require('../helpers/mock-bot');
-var MockTransport = require('../helpers/mock-transport');
+const fs = require('fs');
+const nock = require('nock');
+const path = require('path');
+
+const MockBot = require('../helpers/mock-bot');
+const MockTransport = require('../helpers/mock-transport');
 
 
-describe('YouTube plugin', function () {
-    var mockBot;
-    var mockTransport;
+describe('YouTube plugin', () => {
+    let mockBot;
+    let mockTransport;
 
-    var searchData = fs.readFileSync(path.join(__dirname, '../data/video-search.json'));
-    var videoData = fs.readFileSync(path.join(__dirname, '../data/video.json'));
+    const searchData = fs.readFileSync(path.join(__dirname, '../data/video-search.json'));
+    const videoData = fs.readFileSync(path.join(__dirname, '../data/video.json'));
 
-    beforeEach(function () {
+    beforeEach(() => {
         mockBot = new MockBot({
             'plugins.youtube': {
                 api_key: 'abcdefg',
-                timezone: 'America/Toronto'
-            }
+                timezone: 'America/Toronto',
+            },
         });
         mockTransport = new MockTransport();
     });
 
-    it('should grab YouTube URLs and return video info', function (done) {
-        var scope = nock('https://www.googleapis.com')
+    it('should grab YouTube URLs and return video info', (done) => {
+        const scope = nock('https://www.googleapis.com')
             .get('/youtube/v3/videos')
             .query({
                 part: 'id,snippet,contentDetails,statistics',
@@ -38,15 +40,17 @@ describe('YouTube plugin', function () {
             text: 'Some text https://youtube.com/watch?v=123456789 some more text',
         });
 
-        setTimeout(function () {
+        setTimeout(() => {
             expect(scope.isDone()).toBeTruthy();
-            expect(mockTransport.say).toHaveBeenCalledWith('#channel', '[YouTube] Video Title | Length: 3:33 | Channel: AYouTubeChannel | Uploaded: 2013-10-06 | Views: 1016 | +7 -1 | Comments: 1');
+            expect(mockTransport.say).toHaveBeenCalledWith('#channel',
+                '[YouTube] Video Title | Length: 3:33 | Channel: AYouTubeChannel | ' +
+                'Uploaded: 2013-10-06 | Views: 1016 | +7 -1 | Comments: 1');
             done();
         }, 50);
     });
 
-    it('should search for YouTube videos on command', function (done) {
-        var scope = nock('https://www.googleapis.com')
+    it('should search for YouTube videos on command', (done) => {
+        const scope = nock('https://www.googleapis.com')
             .get('/youtube/v3/search')
             .query({
                 part: 'id',
@@ -70,9 +74,12 @@ describe('YouTube plugin', function () {
             args: 'search phrase',
         });
 
-        setTimeout(function () {
+        setTimeout(() => {
             expect(scope.isDone()).toBeTruthy();
-            expect(mockTransport.say).toHaveBeenCalledWith('#channel', '[YouTube] Video Title | https://www.youtube.com/watch?v=123456789 | Length: 3:33 | Channel: AYouTubeChannel | Uploaded: 2013-10-06 | Views: 1016 | +7 -1 | Comments: 1');
+            expect(mockTransport.say).toHaveBeenCalledWith('#channel',
+                '[YouTube] Video Title | https://www.youtube.com/watch?v=123456789 | ' +
+                'Length: 3:33 | Channel: AYouTubeChannel | Uploaded: 2013-10-06 | ' +
+                'Views: 1016 | +7 -1 | Comments: 1');
             done();
         }, 50);
     });
