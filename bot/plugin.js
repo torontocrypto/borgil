@@ -1,72 +1,76 @@
-var extend = require('extend');
-var util = require('util');
+'use strict';
+
+const extend = require('extend');
+const util = require('util');
 
 
 // A set of commands and properties for a single plugin to access.
 // Instantiating one of these objects per client helps with logging and error handling.
-var Plugin = module.exports = function (bot, name) {
-    this.bot = bot;
-    this.name = name;
+module.exports = class Plugin {
+    constructor(bot, name) {
+        this.bot = bot;
+        this.name = name;
 
-    require('../plugins/' + name)(this);
-};
-
-Object.defineProperties(Plugin.prototype, {
-    config: {get: function () { return this.bot.config; }},
-    buffers: {get: function () { return this.bot.buffers; }},
-    memory: {get: function () { return this.bot.memory; }},
-    transports: {get: function () { return this.bot.transports; }}
-});
-
-// Start listening for a message matching a pattern, and call back with data about the message.
-Plugin.prototype.listen = function (pattern, callback) {
-    var plugin = this;
-
-    this.bot.on('message', function (transport, msg) {
-        var match = msg.text.match(pattern);
-        if (match) {
-            try {
-                callback(extend({
-                    transport: transport,
-                    match: match,
-                }, msg));
-            }
-            catch (e) {
-                plugin.error(e.message);
-            }
-        }
-    });
-};
-
-// Start listening for a command message matching a particular set of commands.
-Plugin.prototype.addCommand = function (commands, callback) {
-    var plugin = this;
-
-    if (typeof commands === 'string') {
-        commands = commands.split(',');
+        // eslint-disable-next-line global-require
+        require(`../plugins/${name}`)(this);
     }
 
-    this.bot.on('command', function (transport, msg) {
-        if (commands.indexOf(msg.command) > -1) {
-            try {
-                callback(extend({
-                    transport: transport,
-                }, msg));
+    get config() {
+        return this.bot.config;
+    }
+    get buffers() {
+        return this.bot.buffers;
+    }
+    get memory() {
+        return this.bot.memory;
+    }
+    get transports() {
+        return this.bot.transports;
+    }
+
+    // Start listening for a message matching a pattern, and call back with data about the message.
+    listen(pattern, callback) {
+        this.bot.on('message', (transport, msg) => {
+            const match = msg.text.match(pattern);
+            if (match) {
+                try {
+                    callback(extend({transport, match}, msg));
+                }
+                catch (err) {
+                    this.error(err.message);
+                }
             }
-            catch (e) {
-                plugin.error(e.message);
+        });
+    }
+
+    // Start listening for a command message matching a particular set of commands.
+    addCommand(commands, callback) {
+        const cmds = (typeof commands === 'string') ? commands.split(',') : commands;
+
+        this.bot.on('command', (transport, msg) => {
+            if (cmds.indexOf(msg.command) > -1) {
+                try {
+                    callback(extend({transport}, msg));
+                }
+                catch (err) {
+                    this.error(err.message);
+                }
             }
-        }
-    });
-};
+        });
+    }
 
+    // Add a line to the log.
+    log(...args) {
+        this.bot.log.info('%s:', this.name, util.format(...args));
+    }
 
-// Add a line to the log.
-Plugin.prototype.log = function () {
-    this.bot.log.info('%s:', this.name, util.format.apply(null, arguments));
-};
+    // Add a warning to the log.
+    warn(...args) {
+        this.bot.log.warn('%s:', this.name, util.format(...args));
+    }
 
-// Add an error to the log.
-Plugin.prototype.error = function () {
-    this.bot.log.error('%s:', this.name, util.format.apply(null, arguments));
+    // Add an error to the log.
+    error(...args) {
+        this.bot.log.error('%s:', this.name, util.format(...args));
+    }
 };
