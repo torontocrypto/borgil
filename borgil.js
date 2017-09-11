@@ -1,4 +1,6 @@
-var Bot = require('./bot/bot');
+'use strict';
+
+const Bot = require('./bot/bot');
 
 
-var borgil = new Bot();
+module.exports = new Bot();

@@ -1,11 +1,13 @@
-var fs = require('fs');
-var handlebars = require('handlebars');
-var moment = require('moment-timezone');
-var path = require('path');
-var winston = require('winston');
+'use strict';
+
+const fs = require('fs');
+const handlebars = require('handlebars');
+const moment = require('moment-timezone');
+const path = require('path');
+const winston = require('winston');
 
 
-var log_defaults = {
+const logDefaults = {
     dir: 'logs',
     filename_template: 'bot--{{date}}.log',
     date_format: 'YYYY-MM-DD--HH-mm-ss',
@@ -13,42 +15,43 @@ var log_defaults = {
     debug: false,
 };
 
-module.exports = function (bot) {
-    var level = bot.config.get('log.debug') ? 'debug' : 'info';
-    var render_filename = handlebars.compile(bot.config.get('log.filename_template', log_defaults.filename_template));
+module.exports = function initLog(bot) {
+    const level = bot.config.get('log.debug') ? 'debug' : 'info';
+    const renderFilename = handlebars.compile(
+        bot.config.get('log.filename_template', logDefaults.filename_template));
 
-    var logdir = bot.config.get('log.dir', log_defaults.dir);
+    const logdir = bot.config.get('log.dir', logDefaults.dir);
     try {
         fs.mkdirSync(logdir);
     }
     catch (err) {
-        if (err.code != 'EEXIST') throw err;
+        if (err.code !== 'EEXIST') throw err;
     }
 
-    var date_format = bot.config.get('log.date_format', log_defaults.date_format);
-    var timezone = bot.config.get('log.timezone');
-    var logfile = path.join(logdir, render_filename({
-        date: (timezone ? moment.tz(timezone) : moment()).format(date_format)
+    const dateFormat = bot.config.get('log.date_format', logDefaults.dateFormat);
+    const timezone = bot.config.get('log.timezone');
+    const logfile = path.join(logdir, renderFilename({
+        date: (timezone ? moment.tz(timezone) : moment()).format(dateFormat),
     }));
 
-    var transports = [];
+    const transports = [];
     if (logfile) {
         transports.push(new winston.transports.File({
             filename: logfile,
             json: false,
-            level: level,
+            level,
             timestamp: true,
         }));
     }
     if (bot.config.get('log.console')) {
         transports.push(new winston.transports.Console({
             colorize: true,
-            level: level,
+            level,
             timestamp: true,
         }));
     }
 
     bot.log = new winston.Logger({
-        transports: transports
+        transports,
     });
 };
