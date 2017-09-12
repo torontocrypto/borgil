@@ -1,10 +1,12 @@
-var DataStore = require('nedb');
-var extend = require('extend');
-var handlebars = require('handlebars');
-var path = require('path');
+'use strict';
+
+const DataStore = require('nedb');
+const extend = require('extend');
+const handlebars = require('handlebars');
+const path = require('path');
 
 
-var default_templates = {
+const defaultTemplates = {
     remember: 'Remembered {{from}} saying "{{text}}".',
     cantRememberWord: 'Sorry, I can\'t remember what {{from}} said about "{{word}}" recently.',
     cantRememberFrom: 'Sorry, I can\'t remember anything {{from}} said recently.',
@@ -16,102 +18,107 @@ var default_templates = {
 };
 
 
-module.exports = function (plugin) {
+module.exports = function quotePlugin(plugin) {
     plugin.db = new DataStore({
-        filename: path.join(plugin.config.get('dbdir', ''), 'quote.db'),
-        autoload: true
+        filename: path.join(plugin.config.get('dbdir', ''), 'quote.plugin.db'),
+        autoload: true,
     });
 
-    var render_template;
+    plugin.addCommand('remember', (cmd) => {
+        const args = cmd.args.split(/\s+/);
+        const nick = args[0];
+        const word = args[1];
 
-    plugin.addCommand('remember', function (cmd) {
-        var args = cmd.args.split(/\s+/),
-            nick = args[0],
-            word = args[1];
-
-        var templates = extend({}, default_templates,
+        const templates = extend({}, defaultTemplates,
             plugin.config.get('plugins.quote.templates', {}));
 
         // Search the channel buffer for matching messages.
-        var buffer = (plugin.buffers[cmd.transport.name] || {})[cmd.replyto] || [];
-        if (!buffer.some(function (msg) {
+        const buffer = (plugin.buffers[cmd.transport.name] || {})[cmd.replyto] || [];
+        if (!buffer.some((msg) => {
             // Exclude command messages.
-            if (msg.command) return false;
+            if (msg.command) {
+                return false;
+            }
 
-            if ((!nick || msg.from == nick) &&
-                    (!word || msg.text.match(new RegExp('\\b' + word + '\\b', 'i')))) {
-                // Add the transport name.
-                msg.transport = cmd.transport.name;
-
-                // Store the message in the quote database.
-                plugin.db.insert(msg, function (err, quote) {
-                    if (err) {
-                        return plugin.log('Error saving quote on %s/%s:', msg.transport, msg.replyto, msg.text);
-                    }
-                    render_template = handlebars.compile(templates.remember);
-                    cmd.transport.say(cmd.replyto, render_template(quote));
-                });
+            if ((!nick || msg.from === nick) &&
+                (!word || new RegExp(`\\b${word}\\b`, 'i').test(msg.text))) {
+                // Add the transport name and store the message in the quote database.
+                plugin.db.insert(Object.assign(msg, {transport: cmd.transport.name}),
+                    (err, quote) => {
+                        if (err) {
+                            return plugin.log('Error saving quote on %s/%s:',
+                                cmd.transport.name, msg.replyto, msg.text);
+                        }
+                        const renderTemplate = handlebars.compile(templates.remember);
+                        cmd.transport.say(cmd.replyto, renderTemplate(quote));
+                    });
                 return true;
             }
+            return false;
         })) {
+            let renderTemplate;
+
             if (word) {
-                render_template = handlebars.compile(templates.cantRememberWord);
+                renderTemplate = handlebars.compile(templates.cantRememberWord);
             }
             else if (nick) {
-                render_template = handlebars.compile(templates.cantRememberFrom);
+                renderTemplate = handlebars.compile(templates.cantRememberFrom);
             }
             else {
-                render_template = handlebars.compile(templates.cantRemember);
+                renderTemplate = handlebars.compile(templates.cantRemember);
             }
-            cmd.transport.say(cmd.replyto, render_template({
+            cmd.transport.say(cmd.replyto, renderTemplate({
                 from: nick || '',
                 word: word || '',
             }));
         }
     });
 
-    plugin.addCommand('quote', function (cmd) {
-        var args = cmd.args.split(/\s+/),
-            nick = args[0],
-            word = args[1];
+    plugin.addCommand('quote', (cmd) => {
+        const args = cmd.args.split(/\s+/);
+        const nick = args[0];
+        const word = args[1];
 
-        var filter = {
+        const filter = {
             transport: cmd.transport.name,
             replyto: cmd.replyto,
         };
-        if (nick) filter.from = nick;
+        if (nick) {
+            filter.from = nick;
+        }
+        if (word) {
+            filter.text = new RegExp(`\\b${word}\\b`, 'i');
+        }
 
-        plugin.db.find(filter, function (err, quotes) {
-            if (err) return plugin.error('Error fetching quote:', err.message);
+        plugin.db.find(filter, (err, quotes) => {
+            if (err) {
+                return plugin.error('Error fetching quote:', err.message);
+            }
 
-            var templates = extend({}, default_templates,
+            const templates = extend({}, defaultTemplates,
                 plugin.config.get('plugins.quote.templates', {}));
-            var render_template;
-
-            if (word) quotes = quotes.filter(function (quote) {
-                return quote.text.match(new RegExp('\\b' + word + '\\b', 'i'));
-            });
+            let renderTemplate;
 
             if (!quotes.length) {
                 if (word) {
-                    render_template = handlebars.compile(templates.cantQuoteWord);
+                    renderTemplate = handlebars.compile(templates.cantQuoteWord);
                 }
                 else if (nick) {
-                    render_template = handlebars.compile(templates.cantQuoteFrom);
+                    renderTemplate = handlebars.compile(templates.cantQuoteFrom);
                 }
                 else {
-                    render_template = handlebars.compile(templates.cantQuote);
+                    renderTemplate = handlebars.compile(templates.cantQuote);
                 }
-                cmd.transport.say(cmd.replyto, render_template({
+                cmd.transport.say(cmd.replyto, renderTemplate({
                     from: nick || '',
                     word: word || '',
                 }));
                 return;
             }
 
-            var quote = quotes[Math.floor(Math.random() * quotes.length)];
-            render_template = handlebars.compile(templates.quote);
-            cmd.transport.say(cmd.replyto, render_template(quote));
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            renderTemplate = handlebars.compile(templates.quote);
+            cmd.transport.say(cmd.replyto, renderTemplate(quote));
         });
     });
 };

@@ -32,6 +32,6 @@ describe('Search and replace plugin', () => {
             text: 's/wrong/right/',
         });
         expect(mockTransport.say).toHaveBeenCalledWith('#channel1',
-            'somebody meant to say: This message is right!');
+            'somebody', 'meant to say:', 'This message is right!');
     });
 });
