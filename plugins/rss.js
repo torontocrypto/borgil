@@ -111,7 +111,7 @@ module.exports = function rssPlugin(plugin) {
                     url: item.link,
                 });
             });
-    }
+    };
 
     function displayItem(feed, item) {
         const renderItemTemplate = handlebars.compile(

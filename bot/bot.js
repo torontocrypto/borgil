@@ -26,9 +26,9 @@ module.exports = class Bot extends EventEmitter {
 
         this.config = new Config(configfile);
 
-        this.memory = {};
+        // A shared key/value store that all plugins can read and write to.
+        this.memory = new Map();
 
-        // Include extra functionality.
         this.initLog();
         this.initBuffers();
         this.initTransports();
@@ -45,7 +45,9 @@ module.exports = class Bot extends EventEmitter {
             fs.mkdirSync(logdir);
         }
         catch (err) {
-            if (err.code !== 'EEXIST') throw err;
+            if (err.code !== 'EEXIST') {
+                throw err;
+            }
         }
 
         const dateFormat = this.config.get('log.date_format', logDefaults.dateFormat);

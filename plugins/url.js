@@ -13,7 +13,8 @@ module.exports = function urlPlugin(plugin) {
     // fetch title for URLs and echo it into the channel
     plugin.listen(/https?:\/\/([^/\s]+)\S*/i, (msg) => {
         // cancel if the message matches any patterns placed in url_exclusions by other plugins
-        if ((plugin.memory.url_exclusions || []).some(pattern => !!msg.text.match(pattern))) {
+        if ((plugin.memory.get('url_exclusions') || [])
+            .some(pattern => !!msg.text.match(pattern))) {
             return;
         }
 

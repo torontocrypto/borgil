@@ -12,7 +12,6 @@ const MockTransport = require('../helpers/mock-transport');
 describe('RSS feed plugin', () => {
     let mockBot;
     let irc1;
-    let irc2;
     let db;
 
     const rssFile = fs.readFileSync(`${__dirname}/../data/feed.rss`, {encoding: 'utf8'});
@@ -26,7 +25,7 @@ describe('RSS feed plugin', () => {
             'plugins.rss.item_template': '[{{name}}] {{{title}}} | {{url}}',
         });
         irc1 = mockBot.transports.irc1 = new MockTransport('irc1');
-        irc2 = mockBot.transports.irc2 = new MockTransport('irc2');
+        mockBot.transports.irc2 = new MockTransport('irc2');
 
         // Set up mock responses.
         nock('http://feed.com')

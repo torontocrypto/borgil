@@ -19,10 +19,10 @@ const urlPattern = /(?:youtube.com\/watch\S*v=|youtu.be\/)([\w-]+)/;
 
 module.exports = function youtubePlugin(plugin) {
     // add pattern to url exclusions so it doesn't also trigger the url plugin
-    if (!plugin.memory.url_exclusions) {
-        plugin.memory.url_exclusions = [];
+    if (!plugin.memory.has('url_exclusions')) {
+        plugin.memory.set('url_exclusions', []);
     }
-    plugin.memory.url_exclusions.push(urlPattern);
+    plugin.memory.get('url_exclusions').push(urlPattern);
 
     function getVideo(id, callback) {
         const apiKey = plugin.config.get('plugins.youtube.api_key');

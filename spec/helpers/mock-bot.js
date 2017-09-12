@@ -14,18 +14,17 @@ module.exports = class MockBot extends EventEmitter {
 
         this.config = new Config(config || {});
 
-        this.plugins = {};
-        this.memory = {};
-
         // Mock out extra bot functionality.
+        this.memory = new Map();
         this.log = winston;
         this.transports = transports || {};
         this.buffers = {};
-
-        winston.level = 'error';
+        this.plugins = {};
 
         Object.keys(this.config.get('plugins', {})).forEach((pluginName) => {
             this.plugins[pluginName] = new Plugin(this, pluginName);
         });
+
+        winston.level = 'error';
     }
 };

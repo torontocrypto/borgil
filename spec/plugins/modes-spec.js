@@ -5,6 +5,7 @@ const MockTransport = require('../helpers/mock-transport');
 
 
 describe('IRC modes plugin', () => {
+    let mockBot; // eslint-disable-line no-unused-vars
     let mockIRC;
 
     beforeEach(() => {
@@ -13,7 +14,7 @@ describe('IRC modes plugin', () => {
             send: jasmine.createSpy(),
         };
 
-        const mockBot = new MockBot(
+        mockBot = new MockBot(
             {'plugins.modes.irc': '+B'},
             {irc: mockIRC},
         );
