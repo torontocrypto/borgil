@@ -1,23 +1,25 @@
-var fs = require('fs');
-var nock = require('nock');
-var path = require('path');
+'use strict';
 
-var MockBot = require('../helpers/mock-bot');
-var MockTransport = require('../helpers/mock-transport');
+const fs = require('fs');
+const nock = require('nock');
+const path = require('path');
+
+const MockBot = require('../helpers/mock-bot');
+const MockTransport = require('../helpers/mock-transport');
 
 
-describe('DuckDuckGo scraper plugin', function () {
-    var mockBot;
-    var mockTransport;
+describe('DuckDuckGo scraper plugin', () => {
+    let mockBot;
+    let mockTransport;
 
-    var searchPage = fs.readFileSync(path.join(__dirname, '../data/ddg.html'));
+    const searchPage = fs.readFileSync(path.join(__dirname, '../data/ddg.html'));
 
-    beforeEach(function () {
+    beforeEach(() => {
         mockBot = new MockBot({plugins: {'ddg-scraper': {}}});
         mockTransport = new MockTransport();
     });
 
-    it('should fetch and parse the first item from a DuckDuckGo results page', function (done) {
+    it('should fetch and parse the first item from a DuckDuckGo results page', (done) => {
         nock('https://duckduckgo.com')
             .get('/html?q=Betelgeuse')
             .reply(200, searchPage);
@@ -28,9 +30,10 @@ describe('DuckDuckGo scraper plugin', function () {
             args: 'Betelgeuse',
         });
 
-        setTimeout(function () {
+        setTimeout(() => {
             expect(mockTransport.say).toHaveBeenCalledWith('#channel1',
-                '[DDG] Betelgeuse - Wikipedia, the free encyclopedia | https://en.wikipedia.org/wiki/Betelgeuse');
+                '[DDG] Betelgeuse - Wikipedia, the free encyclopedia | ' +
+                'https://en.wikipedia.org/wiki/Betelgeuse');
             done();
         }, 50);
     });

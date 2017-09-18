@@ -1,30 +1,31 @@
-var fs = require('fs');
-var mkdirp = require('mkdirp');
-var nock = require('nock');
-var path = require('path');
+'use strict';
 
-var MockBot = require('../helpers/mock-bot');
-var MockTransport = require('../helpers/mock-transport');
+const fs = require('fs');
+const mkdirp = require('mkdirp');
+const nock = require('nock');
+const path = require('path');
+
+const MockBot = require('../helpers/mock-bot');
+const MockTransport = require('../helpers/mock-transport');
 
 
-describe('RSS feed plugin', function () {
-    var mockBot;
-    var irc1;
-    var irc2;
-    var db;
+describe('RSS feed plugin', () => {
+    let mockBot;
+    let irc1;
+    let db;
 
-    var rssFile = fs.readFileSync(__dirname + '/../data/feed.rss', {encoding: 'utf8'});
-    var atomFile = fs.readFileSync(__dirname + '/../data/feed.atom', {encoding: 'utf8'});
+    const rssFile = fs.readFileSync(`${__dirname}/../data/feed.rss`, {encoding: 'utf8'});
+    const atomFile = fs.readFileSync(`${__dirname}/../data/feed.atom`, {encoding: 'utf8'});
 
-    beforeEach(function (done) {
+    beforeEach((done) => {
         mkdirp.sync(path.join(__dirname, '../temp'));
 
         mockBot = new MockBot({
             dbdir: path.join(__dirname, '../temp'),
-            'plugins.rss.item_template': '[{{name}}] {{{title}}} | {{url}}'
+            'plugins.rss.item_template': '[{{name}}] {{{title}}} | {{url}}',
         });
         irc1 = mockBot.transports.irc1 = new MockTransport('irc1');
-        irc2 = mockBot.transports.irc2 = new MockTransport('irc2');
+        mockBot.transports.irc2 = new MockTransport('irc2');
 
         // Set up mock responses.
         nock('http://feed.com')
@@ -33,7 +34,7 @@ describe('RSS feed plugin', function () {
 
         // Clear the database and set up spies.
         db = mockBot.plugins.rss.db;
-        db.remove({}, {multi: true}, function () {
+        db.remove({}, {multi: true}, () => {
             spyOn(db, 'insert').and.callThrough();
             spyOn(db, 'find').and.callThrough();
             spyOn(db, 'remove').and.callThrough();
@@ -41,26 +42,26 @@ describe('RSS feed plugin', function () {
         });
     });
 
-    it('should quickly fetch a feed on command', function (done) {
+    it('should quickly fetch a feed on command', (done) => {
         mockBot.emit('command', irc1, {
             replyto: '#channel1',
             command: 'rss',
             args: 'quick http://feed.com/rss',
         });
-        setTimeout(function () {
+        setTimeout(() => {
             expect(irc1.say).toHaveBeenCalledWith('#channel1',
                 '[QUICK] Example entry | http://www.example.com/blog/post/1');
             done();
         }, 500);
     });
 
-    it('should add a feed to the database on command', function (done) {
+    it('should add a feed to the database on command', (done) => {
         mockBot.emit('command', irc1, {
             replyto: '#channel1',
             command: 'rss',
             args: 'add newFeed http://feed.com/rss',
         });
-        setTimeout(function () {
+        setTimeout(() => {
             expect(db.insert).toHaveBeenCalledWith(jasmine.objectContaining({
                 transport: 'irc1',
                 target: '#channel1',
@@ -71,7 +72,7 @@ describe('RSS feed plugin', function () {
         }, 100);
     });
 
-    it('should remove a feed from the database on command', function () {
+    it('should remove a feed from the database on command', () => {
         mockBot.emit('command', irc1, {
             replyto: '#channel1',
             command: 'rss',
@@ -84,8 +85,8 @@ describe('RSS feed plugin', function () {
         }), jasmine.any(Function));
     });
 
-    describe('list command', function () {
-        beforeEach(function (done) {
+    describe('list command', () => {
+        beforeEach((done) => {
             db.insert([
                 {
                     transport: 'irc1',
@@ -115,13 +116,13 @@ describe('RSS feed plugin', function () {
             ], done);
         });
 
-        it('should list all feeds in the current channel on command', function (done) {
+        it('should list all feeds in the current channel on command', (done) => {
             mockBot.emit('command', irc1, {
                 replyto: '#channel1',
                 command: 'rss',
                 args: 'list',
             });
-            setTimeout(function () {
+            setTimeout(() => {
                 expect(irc1.say).toHaveBeenCalledWith('#channel1',
                     'Found %d feed%s.', 2, 's');
                 expect(irc1.say).toHaveBeenCalledWith('#channel1',
@@ -133,16 +134,18 @@ describe('RSS feed plugin', function () {
         });
     });
 
-    it('should fetch a feed and pass the latest item to a callback', function (done) {
-        mockBot.plugins.rss.fetchLatestItem({
-            url: 'http://feed.com/rss',
-            color: 'dark_red',
-        }, function (err, item) {
-            expect(item).toEqual({
-                title: 'Example entry',
-                url: 'http://www.example.com/blog/post/1',
+    it('should fetch a feed and pass the latest item to a callback', (done) => {
+        mockBot.plugins.rss.fetchLatestItem(
+            {
+                url: 'http://feed.com/rss',
+                color: 'dark_red',
+            },
+            (err, item) => {
+                expect(item).toEqual({
+                    title: 'Example entry',
+                    url: 'http://www.example.com/blog/post/1',
+                });
+                done();
             });
-            done();
-        });
     });
 });

@@ -1,9 +1,11 @@
-var Config = require('../../bot/config');
+'use strict';
+
+const Config = require('../../bot/config');
 
 
-describe('Configuration object', function () {
-    it('should set and get using dot notation', function () {
-        var config = new Config();
+describe('Configuration object', () => {
+    it('should set and get using dot notation', () => {
+        const config = new Config();
         config.set('one.two.three', 'four');
         expect(config.get('one')).toEqual({
             two: {
@@ -16,8 +18,8 @@ describe('Configuration object', function () {
         expect(config.get('one.two.three')).toEqual('four');
     });
 
-    it('should set using mixed dot notation', function () {
-        var config = new Config();
+    it('should set using mixed dot notation', () => {
+        const config = new Config();
         config.set('one.two', {
             'three.four': {
                 'five.six': 'seven',
@@ -40,8 +42,8 @@ describe('Configuration object', function () {
         });
     });
 
-    it('should initialize using mixed dot notation', function () {
-        var config = new Config({
+    it('should initialize using mixed dot notation', () => {
+        const config = new Config({
             one: {
                 two: {
                     three: 'four',
@@ -59,8 +61,8 @@ describe('Configuration object', function () {
         expect(config.get('nine.ten.eleven')).toEqual('twelve');
     });
 
-    it('should set multiple mixed-dot values with some of the same roots', function () {
-        var config = new Config({
+    it('should set multiple mixed-dot values with some of the same roots', () => {
+        const config = new Config({
             'one.two': 'three',
             'one.four': 'five',
         });
@@ -70,8 +72,8 @@ describe('Configuration object', function () {
         });
     });
 
-    it('should get a default value for undefined paths', function () {
-        var config = new Config({
+    it('should get a default value for undefined paths', () => {
+        const config = new Config({
             one: 'two',
             'three.four': 'five',
         });
@@ -80,8 +82,8 @@ describe('Configuration object', function () {
         expect(config.get('three.five', 'default')).toEqual('default');
     });
 
-    it('should parse objects inside of arrays', function () {
-        var config = new Config({
+    it('should parse objects inside of arrays', () => {
+        const config = new Config({
             one: ['two', 'three'],
             'four.five': [{
                 'six.seven': 'eight',
@@ -95,8 +97,8 @@ describe('Configuration object', function () {
         expect(config.get('nine.ten.eleven')).toEqual(['twelve']);
     });
 
-    it('should return undefined when getting a child of a scalar or null value', function () {
-        var config = new Config({
+    it('should return undefined when getting a child of a scalar or null value', () => {
+        const config = new Config({
             one: null,
             two: 'two',
             three: 3,

@@ -1,12 +1,14 @@
-var MockBot = require('../helpers/mock-bot');
-var MockTransport = require('../helpers/mock-transport');
+'use strict';
+
+const MockBot = require('../helpers/mock-bot');
+const MockTransport = require('../helpers/mock-transport');
 
 
-describe('Magic 8-ball plugin', function () {
-    var mockBot;
-    var mockTransport;
+describe('Magic 8-ball plugin', () => {
+    let mockBot;
+    let mockTransport;
 
-    beforeEach(function (done) {
+    beforeEach((done) => {
         mockBot = new MockBot({plugins: {eightball: {}}});
         mockTransport = new MockTransport();
 
@@ -14,7 +16,7 @@ describe('Magic 8-ball plugin', function () {
         setTimeout(done, 50);
     });
 
-    it('should send a message to the channel when called', function () {
+    it('should send a message to the channel when called', () => {
         mockBot.emit('command', mockTransport, {
             replyto: '#channel1',
             command: '8ball',

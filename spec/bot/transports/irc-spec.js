@@ -1,25 +1,25 @@
-var irc = require('irc');
+'use strict';
 
-var IRC = require('../../../bot/transports/irc');
-var MockBot = require('../../helpers/mock-bot');
+const IRC = require('../../../bot/transports/irc');
+const MockBot = require('../../helpers/mock-bot');
 
 
-describe('IRC transport', function () {
-    var bot;
-    var transport;
-    var messageHandler;
-    var commandHandler;
+describe('IRC transport', () => {
+    let bot;
+    let transport;
+    let messageHandler;
+    let commandHandler;
 
-    beforeEach(function () {
+    beforeEach(() => {
         bot = new MockBot({
             'debug.log': false,
-            'commandchar': '%',
+            commandchar: '%',
         });
 
         transport = new IRC(bot, 'irc', {
             host: 'irc.server.com',
             nick: 'borgil',
-            opts: {}
+            opts: {},
         });
 
         messageHandler = jasmine.createSpy();
@@ -28,7 +28,7 @@ describe('IRC transport', function () {
         transport.on('command', commandHandler);
     });
 
-    it('should emit message events', function () {
+    it('should emit message events', () => {
         transport.irc.emit('message', 'nick', '#channel', 'blah blah', {});
 
         expect(messageHandler).toHaveBeenCalledWith(jasmine.objectContaining({
@@ -40,10 +40,10 @@ describe('IRC transport', function () {
         expect(commandHandler).not.toHaveBeenCalled();
     });
 
-    it('should emit commands as message and command events', function () {
+    it('should emit commands as message and command events', () => {
         transport.irc.emit('message', 'nick', '#channel', '%command arg1 arg2');
 
-        var expectedData = jasmine.objectContaining({
+        const expectedData = jasmine.objectContaining({
             from: 'nick',
             to: '#channel',
             replyto: '#channel',

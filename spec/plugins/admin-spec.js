@@ -1,15 +1,17 @@
-var MockBot = require('../helpers/mock-bot');
-var MockTransport = require('../helpers/mock-transport');
+'use strict';
+
+const MockBot = require('../helpers/mock-bot');
+const MockTransport = require('../helpers/mock-transport');
 
 
-describe('Admin plugin', function () {
-    var mockBot;
-    var mockTransport;
+describe('Admin plugin', () => {
+    let mockBot;
+    let mockTransport;
 
-    beforeEach(function () {
+    beforeEach(() => {
         mockBot = new MockBot({
             admins: ['admin'],
-            plugins: {admin: {}}
+            plugins: {admin: {}},
         });
         mockTransport = new MockTransport();
         mockTransport.channels = [
@@ -17,7 +19,7 @@ describe('Admin plugin', function () {
         ];
     });
 
-    it('should join a new channel', function () {
+    it('should join a new channel', () => {
         mockBot.emit('command', mockTransport, {
             from: 'admin',
             command: 'join',
@@ -26,7 +28,7 @@ describe('Admin plugin', function () {
         expect(mockTransport.join).toHaveBeenCalledWith('#newchannel', jasmine.any(Function));
     });
 
-    it('should refuse to join channels the bot is already in', function () {
+    it('should refuse to join channels the bot is already in', () => {
         mockBot.emit('command', mockTransport, {
             from: 'admin',
             replyto: '#channel1',
@@ -37,7 +39,7 @@ describe('Admin plugin', function () {
         expect(mockTransport.say).toHaveBeenCalledWith('#channel1', "I'm already in that channel.");
     });
 
-    it('should refuse to join channels if the caller is not an admin', function () {
+    it('should refuse to join channels if the caller is not an admin', () => {
         mockBot.emit('command', mockTransport, {
             from: 'notadmin',
             command: 'join',
@@ -46,7 +48,7 @@ describe('Admin plugin', function () {
         expect(mockTransport.join).not.toHaveBeenCalled();
     });
 
-    it('should part the channel', function () {
+    it('should part the channel', () => {
         mockBot.emit('command', mockTransport, {
             from: 'admin',
             command: 'part',
@@ -55,16 +57,17 @@ describe('Admin plugin', function () {
         expect(mockTransport.leave).toHaveBeenCalledWith('#channel1', null, jasmine.any(Function));
     });
 
-    it('should part the channel with a message', function () {
+    it('should part the channel with a message', () => {
         mockBot.emit('command', mockTransport, {
             from: 'admin',
             command: 'part',
             args: '#channel1 Later, dudes!',
         });
-        expect(mockTransport.leave).toHaveBeenCalledWith('#channel1', 'Later, dudes!', jasmine.any(Function));
+        expect(mockTransport.leave).toHaveBeenCalledWith('#channel1', 'Later, dudes!',
+            jasmine.any(Function));
     });
 
-    it('should refuse to part channels the bot is not in', function () {
+    it('should refuse to part channels the bot is not in', () => {
         mockBot.emit('command', mockTransport, {
             from: 'admin',
             replyto: '#channel1',
@@ -75,7 +78,7 @@ describe('Admin plugin', function () {
         expect(mockTransport.say).toHaveBeenCalledWith('#channel1', "I'm not in that channel.");
     });
 
-    it('should refuse to part channels if the caller is not an admin', function () {
+    it('should refuse to part channels if the caller is not an admin', () => {
         mockBot.emit('command', mockTransport, {
             from: 'notadmin',
             command: 'part',
