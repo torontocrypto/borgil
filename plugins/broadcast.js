@@ -33,8 +33,14 @@ module.exports = function broadcastPlugin(plugin) {
     }
 
     plugin.listen('.*', (msg) => {
+        // Don't broadcast non-text messages or commands.
+        if (!msg.text || msg.command) {
+            return;
+        }
+
         if (plugin.config.get('plugins.broadcast.broadcast_all')) {
             // Build a set of targets from all joined channels in all connected networks.
+            // For IRC it's all joined channels. For Telegram it's the transport config's chat_ids.
             const targets = [];
             Object.keys(plugin.transports).forEach((tpName) => {
                 plugin.transports[tpName].channels.forEach((channel) => {
@@ -48,13 +54,10 @@ module.exports = function broadcastPlugin(plugin) {
         }
         else {
             // Iterate through the configured sets of targets that will be broadcast to each other.
-            plugin.config.get('plugins.broadcast.target_sets', []).forEach((targets) => {
-                // Check that the received message's target is in this set.
-                if (targets.some(target => (target.transport === msg.transport.name &&
-                    target.channel === msg.replyto))) {
-                    broadcastToTargets(msg, targets);
-                }
-            });
+            plugin.config.get('plugins.broadcast.target_sets', [])
+                .filter(targets => targets.some(target =>
+                    (target.transport === msg.transport.name && target.channel === msg.replyto)))
+                .forEach(targets => broadcastToTargets(msg, targets));
         }
     });
 };
