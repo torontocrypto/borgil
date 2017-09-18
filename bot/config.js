@@ -85,7 +85,7 @@ module.exports = class Config {
 
     get(path, defval) {
         const value = getValue(this.config, Array.isArray(path) ? path : path.split('.'));
-        return value !== undefined ? value : defval;
+        return (value === undefined || value === null) ? defval : value;
     }
 
     set(path, value) {
