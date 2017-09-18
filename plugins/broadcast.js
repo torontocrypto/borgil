@@ -26,8 +26,14 @@ module.exports = function (plugin) {
     }
 
     plugin.listen('.*', function (msg) {
+        // Don't broadcast non-text messages.
+        if (!msg.text) {
+            return;
+        }
+
         if (plugin.config.get('plugins.broadcast.broadcast_all')) {
             // Build a set of targets from all joined channels in all connected networks.
+            // For IRC it's all joined channels. For Telegram it's the transport config's chat_ids.
             var targets = [];
             for (var tpname in plugin.transports) {
                 plugin.transports[tpname].channels.forEach(function (channel) {
