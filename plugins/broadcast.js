@@ -26,8 +26,8 @@ module.exports = function (plugin) {
     }
 
     plugin.listen('.*', function (msg) {
-        // Don't broadcast non-text messages.
-        if (!msg.text) {
+        // Don't broadcast non-text messages or commands.
+        if (!msg.text || msg.command) {
             return;
         }
 
