@@ -20,7 +20,7 @@ const defaultTemplates = {
 
 module.exports = function quotePlugin(plugin) {
     plugin.db = new DataStore({
-        filename: path.join(plugin.config.get('dbdir', ''), 'quote.plugin.db'),
+        filename: path.join(plugin.config.get('dbdir', ''), 'quote.db'),
         autoload: true,
     });
 
